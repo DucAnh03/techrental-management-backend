@@ -2,43 +2,49 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import connectDB from './src/config/database.js';
-import https from 'https';
-import fs from 'fs';
+
+import authRoutes from './src/routes/authRoutes.js';
+// import productRoutes from './src/routes/productRoutes.js';
 
 dotenv.config();
 
 const app = express();
 
-// Kết nối MongoDB
-connectDB();
+connectDB().catch((error) => {
+  console.error('❌ Failed to connect to MongoDB:', error.message);
+  process.exit(1);
+});
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
 // Routes
+app.use('/api/auth', authRoutes);
+
+// Route test server
 app.get('/', (req, res) => {
-  res.json({ message: 'Welcome to the API' });
+  res.json({ message: 'Welcome to Techrental API' });
 });
 
+// 404 Not Found handler
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
+// Global Error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!' });
+  res.status(500).json({
+    message: 'Something went wrong!',
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+  });
 });
 
-//  certificate và private key
-const options = {
-  key: fs.readFileSync('key.pem'),
-  cert: fs.readFileSync('cert.pem'),
-};
-
+// Start server
 const PORT = process.env.PORT || 3000;
-https.createServer(options, app).listen(PORT, () => {
+app.listen(PORT, () => {
   console.log(
-    `HTTPS Server running in ${process.env.NODE_ENV} mode on port ${PORT}`
+    `🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}`
   );
 });
