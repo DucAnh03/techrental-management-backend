@@ -1,6 +1,4 @@
 import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
-
 // Parse and verify token
 export const protect = async (req, res, next) => {
   const authHeader = req.headers.authorization;
