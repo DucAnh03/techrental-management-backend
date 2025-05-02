@@ -1,6 +1,4 @@
-import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
-import bcrypt from 'bcryptjs';
 import {
   sendToken,
   sendResetToken,
@@ -9,17 +7,17 @@ import {
   checkToken,
   getEmailByToken,
   getAllUsers,
+  register as registerService,
+  login as loginService,
 } from '../service/authentication/index.js';
 
 // Register User
-export const register = async (req, res) => {
+export const registerController = async (req, res) => {
   try {
     const { username, password, email, phoneNumber, address } = req.body;
-    const password_hash = await bcrypt.hash(password, 10);
-
-    const result = await register(
+    const result = await registerService(
       username,
-      password_hash,
+      password,
       email,
       address,
       phoneNumber
@@ -27,7 +25,11 @@ export const register = async (req, res) => {
 
     if (result.status) {
       const token = await sendToken(email, result.payload._id);
-      res.status(201).json(result);
+      res.status(201).json({
+        message: 'Đăng ký thành công, vui lòng xác minh email',
+        user: result.payload,
+        token: token.payload.token,
+      });
     } else {
       res
         .status(400)
@@ -39,32 +41,35 @@ export const register = async (req, res) => {
 };
 
 // Login User
-export const login = async (req, res) => {
+export const loginController = async (req, res) => {
   try {
     const { usernameOrEmail, password } = req.body;
-    const result = await login(usernameOrEmail, password);
+    const result = await loginService(usernameOrEmail, password);
 
     if (result.status) {
-      const payload = {
-        usernameOrEmail,
-        userId: result.payload._id,
-        roles: result.payload.roles,
-        verify: result.payload.verify,
-      };
+      const user = result.payload;
+      const token = jwt.sign(
+        {
+          userId: user._id,
+          roles: user.roles,
+          verify: user.identityVerification?.status === 'verified',
+          email: user.email,
+        },
+        process.env.SECRET_KEY,
+        { expiresIn: '30d' }
+      );
 
-      const token = jwt.sign(payload, process.env.SECRET_KEY, {
-        expiresIn: '30d',
-      });
-
-      res.json({
+      res.status(200).json({
         token,
-        userId: result.payload._id,
-        roles: result.payload.roles,
-        verify: result.payload.verify,
-        email: result.payload.email,
+        user: {
+          _id: user._id,
+          email: user.email,
+          roles: user.roles,
+          verify: user.identityVerification?.status === 'verified',
+        },
       });
     } else {
-      res.status(400).json(result);
+      res.status(400).json({ message: result.message });
     }
   } catch (error) {
     res.status(500).json({ message: error.message });

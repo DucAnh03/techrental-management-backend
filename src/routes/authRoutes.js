@@ -1,7 +1,7 @@
 import express from 'express';
 import {
-  register,
-  login,
+  registerController,
+  loginController,
   verifyUserController,
   forgotPasswordRequest,
   resetPassword,
@@ -18,8 +18,8 @@ import {
 
 const router = express.Router();
 
-router.post('/register', register);
-router.post('/login', login);
+router.post('/register', registerController);
+router.post('/login', loginController);
 router.get('/verify/:token', verifyUserController);
 router.post('/forgotPassword', forgotPasswordRequest);
 router.post('/forgotPassword/:recoveryToken', resetPassword);
