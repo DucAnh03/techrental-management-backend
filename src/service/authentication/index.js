@@ -1,4 +1,5 @@
 import User from '../../models/User.js';
+import { sendVerificationEmail } from '../../utils/mailer.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
@@ -14,11 +15,11 @@ export const register = async (
   if (existingUser) {
     return { status: false, message: 'Email đã tồn tại' };
   }
-
+  const hashedPassword = await bcrypt.hash(password, 10);
   const newUser = new User({
     name: username,
     email,
-    password,
+    password: hashedPassword,
     address,
     phone: phoneNumber,
     roles: ['renter'],
@@ -50,9 +51,13 @@ export const sendToken = async (email, userId) => {
     expiresIn: '1h',
   });
 
-  console.log(`[Email] Gửi token xác minh tới ${email}: ${token}`);
-
-  return { payload: { token } };
+  try {
+    await sendVerificationEmail(email, token);
+    return { payload: { token } };
+  } catch (err) {
+    console.error('Gửi email xác minh thất bại:', err.message);
+    return { payload: { token }, warning: 'Email verification failed' };
+  }
 };
 
 export const verifyUser = async (token) => {

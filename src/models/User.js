@@ -21,9 +21,7 @@ const userSchema = new mongoose.Schema(
     phone: {
       type: String,
     },
-    address: {
-      type: String,
-    },
+
     roles: {
       type: [String],
       enum: ['renter', 'owner', 'admin'],
@@ -39,6 +37,9 @@ const userSchema = new mongoose.Schema(
         type: String,
         unique: true,
         sparse: true,
+      },
+      address: {
+        type: String,
       },
       documentUrl: {
         type: String,

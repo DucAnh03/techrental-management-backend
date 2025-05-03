@@ -12,6 +12,7 @@ import {
 } from '../service/authentication/index.js';
 
 // Register User
+// this function just send mail to user not exist in database
 export const registerController = async (req, res) => {
   try {
     const { username, password, email, phoneNumber, address } = req.body;
@@ -24,11 +25,13 @@ export const registerController = async (req, res) => {
     );
 
     if (result.status) {
-      const token = await sendToken(email, result.payload._id);
+      const tokenResponse = await sendToken(email, result.payload._id);
       res.status(201).json({
-        message: 'Đăng ký thành công, vui lòng xác minh email',
+        message: tokenResponse.warning
+          ? 'Tạo tài khoản thành công nhưng không gửi được email xác minh'
+          : 'Đăng ký thành công, vui lòng xác minh email',
         user: result.payload,
-        token: token.payload.token,
+        token: tokenResponse.payload.token,
       });
     } else {
       res
