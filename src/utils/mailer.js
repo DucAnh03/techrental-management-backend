@@ -21,3 +21,16 @@ export const sendVerificationEmail = async (to, token) => {
     <p>Nếu bạn không đăng ký, vui lòng bỏ qua email này.</p>`,
   });
 };
+
+export const sendResetPasswordEmail = async (to, token) => {
+  const resetLink = `http://localhost:3000/api/auth/forgotPassword/${token}`;
+
+  await transporter.sendMail({
+    from: `"Techrental Support" <${process.env.EMAIL_USER}>`,
+    to,
+    subject: 'Khôi phục mật khẩu Techrental',
+    html: `<p>Click vào link bên dưới để đặt lại mật khẩu:</p>
+           <a href="${resetLink}">${resetLink}</a>
+           <p>Liên kết có hiệu lực trong 15 phút.</p>`,
+  });
+};
