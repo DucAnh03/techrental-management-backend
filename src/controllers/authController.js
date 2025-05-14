@@ -48,6 +48,7 @@ export const loginController = async (req, res) => {
   try {
     const { usernameOrEmail, password } = req.body;
     const result = await loginService(usernameOrEmail, password);
+    console.log('✅ [POST] /register nhận được:', req.body);
 
     if (result.status) {
       const user = result.payload;
