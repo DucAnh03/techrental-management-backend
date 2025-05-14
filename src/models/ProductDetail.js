@@ -1,7 +1,5 @@
 import mongoose from 'mongoose';
 
-const mongoose = require('mongoose');
-
 const SpecificationSchema = new mongoose.Schema({
     key: String,
     label: String,
@@ -17,7 +15,7 @@ const ProductSchema = new mongoose.Schema({
     },
     title: String,
     brand: String,
-    idCategory: { type: mongoose.Schema.Types.ObjectId, ref: 'CategoryProduct' },
+    category: { type: mongoose.Schema.Types.ObjectId, ref: 'CategoryProduct' },
     price: Number,
     images: [String],
     view: Number,
@@ -28,7 +26,11 @@ const ProductSchema = new mongoose.Schema({
     reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: 'ProductReview' }],
     isHotProduct: Boolean,
     isNewProduct: Boolean,
-    location: String
+    location: {
+        type: String,
+        enum: ['Hồ Chí Minh', 'Đà Nẵng', 'Hà Nội'],
+        required: true
+    }
 }, {
     collection: 'productDetail',
 });

@@ -7,13 +7,32 @@ const ShopSchema = new mongoose.Schema({
         unique: true,
         default: () => new mongoose.Types.ObjectId().toString()
     },
-    response: Number,
-    nameShop: String,
-    rentered: Number,
-    rate: Number,
-    totalReviews: Number,
-    avatar: String
+    name: { type: String, required: true },
+    avatar: { type: String, default: '' },
+    cover: { type: String, default: '' },
+    rating: { type: Number, min: 0, max: 5, default: 0 },
+    followers: { type: Number, default: 0 },
+    responseRate: { type: Number, min: 0, max: 100 },
+    responseTime: { type: String, default: '' },
+    joinedDate: { type: String },
+    productsCount: { type: Number, default: 0 },
+    totalReviews: { type: Number, default: 0 },
+    lastActive: { type: String, default: '' },
+    description: { type: String, default: '' },
+    location: {
+        type: String,
+        enum: ['Hồ Chí Minh', 'Đà Nẵng', 'Hà Nội'],
+        required: true
+    },
+    contact: {
+        phone: String,
+        email: String
+    },
+    operatingHours: String,
+    categories: [String]
 }, {
     collection: 'shopDetail',
+    timestamps: true
 });
+
 export default mongoose.model('ShopDetail', ShopSchema);

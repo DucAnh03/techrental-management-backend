@@ -7,7 +7,7 @@ const CategorySchema = new mongoose.Schema({
         unique: true,
         default: () => new mongoose.Types.ObjectId().toString()
     },
-    nameCategory: String
+    name: String
 }, {
     collection: 'categories',
 });

@@ -2,6 +2,7 @@ import service from '../service/category.service.js';
 
 export const createCategory = async (req, res) => {
     try {
+        console.log("first,req.body", req.body);
         const newCategory = await service.createCategoryService(req.body);
         res.status(201).json({
             message: "Category created successfully",
