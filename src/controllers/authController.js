@@ -69,6 +69,7 @@ export const loginController = async (req, res) => {
           _id: user._id,
           email: user.email,
           roles: user.roles,
+          name: user.name,
           verify: user.identityVerification?.status === 'verified',
         },
       });
