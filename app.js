@@ -14,19 +14,16 @@ connectDB().catch((error) => {
   console.error('❌ Failed to connect to MongoDB:', error.message);
   process.exit(1);
 });
-const corsOptions = {
-  origin: 'http://localhost:3000',
-  credentials: true,
-};
+
 // Middleware
-app.use(cors(corsOptions));
+app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use('/api', router);
+app.use("/api", router);
 // Route test server
 app.get('/', (req, res) => {
-  console.log('heee');
+  console.log("heee")
   res.json({ message: 'Welcome to Techrental API' });
 });
 
