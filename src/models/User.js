@@ -27,6 +27,13 @@ const userSchema = new mongoose.Schema(
       enum: ['renter', 'owner', 'admin'],
       default: ['renter'],
     },
+    resetCode: {
+      type: String,
+    },
+    resetCodeExpiry: {
+      type: Date,
+    },
+
     identityVerification: {
       status: {
         type: String,

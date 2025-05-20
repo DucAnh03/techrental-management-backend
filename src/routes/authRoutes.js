@@ -8,6 +8,7 @@ import {
   getEmailFromToken,
   checkResetTokenController,
   getAllUsersController,
+  resetPasswordWithCode,
 } from '../controllers/authController.js';
 
 import {
@@ -23,6 +24,7 @@ router.post('/login', loginController);
 router.get('/verify/:token', verifyUserController);
 router.post('/forgotPassword', forgotPasswordRequest);
 router.post('/forgotPassword/:recoveryToken', resetPassword);
+router.post('/resetPasswordWithCode', resetPasswordWithCode);
 router.get('/getEmail/:token', getEmailFromToken);
 router.get('/checkResetToken/:token', checkResetTokenController);
 

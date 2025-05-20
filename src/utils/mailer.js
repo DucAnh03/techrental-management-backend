@@ -22,15 +22,20 @@ export const sendVerificationEmail = async (to, token) => {
   });
 };
 
-export const sendResetPasswordEmail = async (to, token) => {
-  const resetLink = `http://localhost:3000/api/auth/forgotPassword/${token}`;
+export const generateResetCode = () =>
+  Math.floor(100000 + Math.random() * 900000).toString(); // 6 số
 
+export const sendResetCodeEmail = async (to, code) => {
   await transporter.sendMail({
-    from: `"Techrental Support" <${process.env.EMAIL_USER}>`,
+    from: `"TechRental Support" <${process.env.SMTP_MAIL}>`,
     to,
-    subject: 'Khôi phục mật khẩu Techrental',
-    html: `<p>Click vào link bên dưới để đặt lại mật khẩu:</p>
-           <a href="${resetLink}">${resetLink}</a>
-           <p>Liên kết có hiệu lực trong 15 phút.</p>`,
+    subject: 'Mã khôi phục mật khẩu TechRental',
+    html: `
+      <p>Bạn (hoặc ai đó) đã yêu cầu đặt lại mật khẩu TechRental.</p>
+      <p>Mã xác thực của bạn là:</p>
+      <h2 style="letter-spacing:4px">${code}</h2>
+      <p>Mã có hiệu lực trong 15&nbsp;phút. Nếu bạn không yêu cầu, hãy bỏ qua email này.</p>
+    `,
   });
+  return code; // để Controller lưu vào DB
 };

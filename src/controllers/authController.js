@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import {
   sendToken,
   sendResetToken,
+  sendResetCode,
   verifyUser,
   forgotPassword,
   checkToken,
@@ -10,6 +11,8 @@ import {
   register as registerService,
   login as loginService,
 } from '../service/authentication/index.js';
+import User from '../models/User.js';
+import bcrypt from 'bcryptjs';
 
 // Register User
 // this function just send mail to user not exist in database
@@ -89,10 +92,50 @@ export const verifyUserController = async (req, res) => {
 };
 
 // Forgot Password
+
+export const resetPasswordWithCode = async (req, res) => {
+  const { email, code, newPassword } = req.body;
+
+  if (!email || !code || !newPassword) {
+    return res
+      .status(400)
+      .json({ message: 'Thiếu email, mã hoặc mật khẩu mới' });
+  }
+
+  const user = await User.findOne({ email });
+  if (!user)
+    return res.status(400).json({ message: 'Không tìm thấy người dùng' });
+  console.log('[DEBUG] code từ client:', code);
+  console.log('[DEBUG] code trong DB:', user.resetCode);
+  console.log('[DEBUG] hết hạn lúc  :', new Date(user.resetCodeExpiry));
+  if (!user.resetCode || user.resetCode.toString() !== code.toString()) {
+    return res.status(400).json({ message: 'Mã không chính xác' });
+  }
+
+  if (Date.now() > user.resetCodeExpiry) {
+    return res.status(400).json({ message: 'Mã đã hết hạn' });
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  user.password = hashedPassword;
+  user.resetCode = null;
+  user.resetCodeExpiry = null;
+
+  await user.save();
+
+  return res.status(200).json({ message: 'Đổi mật khẩu thành công' });
+};
 export const forgotPasswordRequest = async (req, res) => {
-  const { email } = req.body;
-  const result = await sendResetToken(email);
-  res.status(result.code).send(result);
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: 'Email là bắt buộc' });
+
+    const result = await sendResetCode(email);
+    return res.status(result.code).json(result);
+  } catch (error) {
+    console.error('ForgotPwd error:', error);
+    return res.status(500).json({ message: 'Lỗi máy chủ' });
+  }
 };
 
 // Reset Password

@@ -1,5 +1,9 @@
 import User from '../../models/User.js';
-import { sendVerificationEmail ,} from '../../utils/mailer.js';
+import {
+  sendVerificationEmail,
+  generateResetCode,
+  sendResetCodeEmail,
+} from '../../utils/mailer.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
@@ -107,6 +111,19 @@ export const forgotPassword = async (email, token, newPassword) => {
   } catch (err) {
     return { code: 400, message: 'Token không hợp lệ hoặc đã hết hạn' };
   }
+};
+
+export const sendResetCode = async (email) => {
+  const user = await User.findOne({ email });
+  if (!user) return { code: 400, message: 'Email không tồn tại' };
+
+  const code = generateResetCode();
+  user.resetCode = code;
+  user.resetCodeExpiry = Date.now() + 15 * 60 * 1000;
+  await user.save();
+
+  await sendResetCodeEmail(email, code);
+  return { code: 200, message: 'Đã gửi mã khôi phục', email };
 };
 
 export const getEmailByToken = async (token) => {
