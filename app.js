@@ -16,7 +16,7 @@ connectDB().catch((error) => {
 });
 const allowedOrigins = [
   'http://localhost:3000',
-  'https://techrental.vercel.app', // ✅ Thêm dòng này
+  'https://techrental.vercel.app',
 ];
 
 app.use(
