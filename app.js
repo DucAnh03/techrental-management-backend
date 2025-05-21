@@ -14,16 +14,31 @@ connectDB().catch((error) => {
   console.error('❌ Failed to connect to MongoDB:', error.message);
   process.exit(1);
 });
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://techrental.vercel.app', // ✅ Thêm dòng này
+];
 
-// Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 
 // Routes
-app.use("/api", router);
+app.use('/api', router);
 // Route test server
 app.get('/', (req, res) => {
-  console.log("heee")
+  console.log('heee');
   res.json({ message: 'Welcome to Techrental API' });
 });
 
