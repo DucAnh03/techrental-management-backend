@@ -1,4 +1,6 @@
 import ProductDetail from '../models/ProductDetail.js';
+import { v2 as cloudinary } from 'cloudinary';
+
 export const createProduct = async (productData) => {
     const newProduct = new ProductDetail(productData);
     return await newProduct.save();
@@ -13,8 +15,32 @@ export const createManyProduct = async (productData) => {
     }
 };
 
+
 export const deleteProductById = async (_id) => {
-    return await ProductDetail.findByIdAndDelete(_id);
+    try {
+        const product = await ProductDetail.findById(_id);
+        if (!product) {
+            throw new Error('Product not found');
+        }
+
+        const images = product.images || [];
+
+        const publicIds = images.map((url) => {
+            const parts = url.split('/');
+            const fileName = parts[parts.length - 1];
+            const publicId = fileName.split('.')[0];
+            return publicId;
+        });
+
+        for (const public_id of publicIds) {
+            await cloudinary.uploader.destroy(public_id);
+        }
+
+        const deletedProduct = await ProductDetail.findByIdAndDelete(_id);
+        return deletedProduct;
+    } catch (error) {
+        throw error;
+    }
 };
 
 export const getAllProduct = async () => {

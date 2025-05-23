@@ -2,7 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import connectDB from './src/config/database.js';
-
+import { v2 as cloudinary } from 'cloudinary';
 import router from './src/routes/index.js';
 // import productRoutes from './src/routes/productRoutes.js';
 
@@ -40,6 +40,11 @@ app.use('/api', router);
 app.get('/', (req, res) => {
   console.log('heee');
   res.json({ message: 'Welcome to Techrental API' });
+});
+cloudinary.config({
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.API_KEY,
+  api_secret: process.env.API_SECRET,
 });
 
 // 404 Not Found handler
