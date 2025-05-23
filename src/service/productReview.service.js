@@ -1,8 +1,13 @@
+import ProductDetail from '../models/ProductDetail.js';
 import ProductReview from '../models/ProductReview.js';
 
 const createProductReview = async (data) => {
     try {
         const productReviews = await ProductReview.create(data);
+        await ProductDetail.findByIdAndUpdate(
+            productReviews.product,
+            { $push: { reviews: productReviews._id } }
+        );
         return productReviews;
     } catch (error) {
         throw error;
@@ -34,9 +39,9 @@ const getProductReviewById = async (_id) => {
 };
 const getAllProductReviewByIdProduct = async (_id) => {
     try {
-        const productReviews = await ProductReview.find({
-            idProduct: _id
-        });
+        const productReviews = await ProductReview.find({ product: _id })
+            .sort({ createdAt: -1 })
+            .lean();
         return productReviews;
     }
     catch (error) {

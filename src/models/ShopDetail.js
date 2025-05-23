@@ -1,11 +1,11 @@
 import mongoose from 'mongoose';
 
 const ShopSchema = new mongoose.Schema({
-    idShop: {
-        type: String,
+    idUser: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
         required: true,
         unique: true,
-        default: () => new mongoose.Types.ObjectId().toString()
     },
     name: { type: String, required: true },
     avatar: { type: String, default: '' },
@@ -29,7 +29,6 @@ const ShopSchema = new mongoose.Schema({
         email: String
     },
     operatingHours: String,
-    categories: [String]
 }, {
     collection: 'shopDetail',
     timestamps: true

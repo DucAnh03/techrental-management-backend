@@ -2,7 +2,7 @@ import service from '../service/shopDetail.service.js';
 
 export const createShopDetail = async (req, res) => {
     try {
-        const newShopDetail = await service.createShopDetail(req.body);
+        const newShopDetail = await service.createShopDetail(req.authenticatedUser, req.body);
         res.status(201).json({
             message: "ShopDetail created successfully",
             metadata: newShopDetail,
@@ -32,6 +32,7 @@ export const deleteShopDetailById = async (req, res) => {
     }
 }
 export const getAllShopDetail = async (req, res) => {
+    console.log("first", req.user)
     try {
         const shopDetails = await service.getAllShopDetail();
         if (!shopDetails || shopDetails.length === 0) {

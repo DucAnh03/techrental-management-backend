@@ -1,5 +1,4 @@
 import ProductDetail from '../models/ProductDetail.js';
-
 export const createProduct = async (productData) => {
     const newProduct = new ProductDetail(productData);
     return await newProduct.save();
@@ -14,25 +13,20 @@ export const createManyProduct = async (productData) => {
     }
 };
 
-
 export const deleteProductById = async (_id) => {
     return await ProductDetail.findByIdAndDelete(_id);
 };
 
 export const getAllProduct = async () => {
-    return await ProductDetail.find().populate("idShop")
-        .populate("category");
+    return await ProductDetail.find()
+        .populate("idShop")
+        .populate("category").populate('reviews');
 };
 
 export const getProductById = async (_id) => {
-    return await ProductDetail.findById(_id);
-};
-export const getProductByIdProduct = async (_id) => {
     try {
-        const product = await ProductDetail.findOne({ idProduct: _id })
-            .populate("idShop")
-            .populate("category")
-        // .populate("reviews");
+        const product = await ProductDetail.findById(_id).populate("idShop")
+            .populate("category").populate('reviews')
 
         return product;
     } catch (error) {
@@ -42,7 +36,8 @@ export const getProductByIdProduct = async (_id) => {
 };
 
 export const getAllProductByIdShop = async (_id) => {
-    return await ProductDetail.find({ idShop: _id });
+    return await ProductDetail.find({ idShop: _id }).populate("idShop")
+        .populate("category").populate('reviews');
 };
 
-export default { createProduct, deleteProductById, getAllProduct, getProductById, getAllProductByIdShop, getProductByIdProduct, createManyProduct };
+export default { createProduct, deleteProductById, getAllProduct, getProductById, getAllProductByIdShop, createManyProduct };

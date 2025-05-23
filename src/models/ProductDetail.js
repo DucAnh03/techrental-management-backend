@@ -7,30 +7,31 @@ const SpecificationSchema = new mongoose.Schema({
 });
 
 const ProductSchema = new mongoose.Schema({
-    idProduct: {
-        type: String,
-        required: true,
-        unique: true,
-        default: () => new mongoose.Types.ObjectId().toString()
-    },
     title: String,
     brand: String,
-    category: { type: mongoose.Schema.Types.ObjectId, ref: 'CategoryProduct' },
-    price: Number,
+    category: {
+        type: mongoose.Schema.Types.ObjectId, ref: 'CategoryProduct', required: true
+    },
+    price: { type: Number, require: true },
+    priceWeek: { type: Number },
+    priceMonth: { type: Number },
     images: [String],
-    view: Number,
+    view: { type: Number, require: 0 },
     idShop: { type: mongoose.Schema.Types.ObjectId, ref: 'ShopDetail' },
     details: String,
     shortDetails: String,
     parameter: [SpecificationSchema],
     reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: 'ProductReview' }],
-    isHotProduct: Boolean,
-    isNewProduct: Boolean,
+    isHotProduct: { type: Boolean, default: false },
+    isNewProduct: { type: Boolean, default: false },
     location: {
         type: String,
         enum: ['Hồ Chí Minh', 'Đà Nẵng', 'Hà Nội'],
         required: true
-    }
+    },
+    soldCount: { type: Number, default: 0 },
+    discount: { type: Number, default: 0 },
+    stock: { type: Number, default: 0 },
 }, {
     collection: 'productDetail',
 });

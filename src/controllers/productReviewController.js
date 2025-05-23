@@ -1,7 +1,7 @@
-import service from '../service/category.service.js';
+import service from '../service/productReview.service.js';
 export const createProductReview = async (req, res) => {
     try {
-        const newProductReview = await service.createCategoryService(req.body);
+        const newProductReview = await service.createProductReview(req.body);
         res.status(201).json({
             message: "Category created successfully",
             metadata: newProductReview,

@@ -1,11 +1,12 @@
 import express from 'express';
 import { createProduct, deleteProductById, getAllProduct, getProductById, getAllProductByIdShop, createManyProduct } from '../controllers/productController.js';
+import { ensureVerifiedUser, protect } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
 router.post("/", createProduct);
-router.post("/createMany", createManyProduct);
-router.delete("/:_id", deleteProductById);
+router.post("/createMany", protect, ensureVerifiedUser, createManyProduct);
+router.delete("/:_id", protect, ensureVerifiedUser, deleteProductById);
 router.get("/", getAllProduct);
 router.get("/:_id", getProductById);
 router.get("/store/:_id", getAllProductByIdShop);

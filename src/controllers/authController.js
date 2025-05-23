@@ -61,6 +61,7 @@ export const loginController = async (req, res) => {
           roles: user.roles,
           verify: user.identityVerification?.status === 'verified',
           email: user.email,
+          phone: user.phone
         },
         process.env.SECRET_KEY,
         { expiresIn: '30d' }
@@ -74,6 +75,7 @@ export const loginController = async (req, res) => {
           roles: user.roles,
           name: user.name,
           verify: user.identityVerification?.status === 'verified',
+          phone: user.phone
         },
       });
     } else {
