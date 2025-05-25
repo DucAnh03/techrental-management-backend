@@ -1,15 +1,17 @@
 import nodemailer from 'nodemailer';
 
 const transporter = nodemailer.createTransport({
-  service: 'Gmail',
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false,
   auth: {
     user: process.env.SMTP_MAIL,
     pass: process.env.SMTP_PASS,
   },
 });
-
+const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
 export const sendVerificationEmail = async (to, token) => {
-  const verificationLink = `http://localhost:3000/api/auth/verify/${token}`;
+  const verificationLink = `${CLIENT_URL}/api/auth/verify/${token}`;
 
   await transporter.sendMail({
     from: `"Techrental" <${process.env.EMAIL_USER}>`,
@@ -23,7 +25,7 @@ export const sendVerificationEmail = async (to, token) => {
 };
 
 export const generateResetCode = () =>
-  Math.floor(100000 + Math.random() * 900000).toString(); // 6 số
+  Math.floor(100000 + Math.random() * 900000).toString();
 
 export const sendResetCodeEmail = async (to, code) => {
   await transporter.sendMail({

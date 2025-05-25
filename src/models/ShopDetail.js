@@ -1,12 +1,14 @@
 import mongoose from 'mongoose';
 
-const ShopSchema = new mongoose.Schema({
+const ShopSchema = new mongoose.Schema(
+  {
     idUser: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true,
-        unique: true,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+      unique: true,
     },
+    
     name: { type: String, required: true },
     avatar: { type: String, default: '' },
     cover: { type: String, default: '' },
@@ -20,18 +22,20 @@ const ShopSchema = new mongoose.Schema({
     lastActive: { type: String, default: '' },
     description: { type: String, default: '' },
     location: {
-        type: String,
-        enum: ['Hồ Chí Minh', 'Đà Nẵng', 'Hà Nội'],
-        required: true
+      type: String,
+      enum: ['Hồ Chí Minh', 'Đà Nẵng', 'Hà Nội'],
+      required: true,
     },
     contact: {
-        phone: String,
-        email: String
+      phone: String,
+      email: String,
     },
     operatingHours: String,
-}, {
+  },
+  {
     collection: 'shopDetail',
-    timestamps: true
-});
+    timestamps: true,
+  }
+);
 
 export default mongoose.model('ShopDetail', ShopSchema);

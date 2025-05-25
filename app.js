@@ -1,14 +1,18 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import http from 'http';
+
 import connectDB from './src/config/database.js';
 import { v2 as cloudinary } from 'cloudinary';
 import router from './src/routes/index.js';
 // import productRoutes from './src/routes/productRoutes.js';
+import { Server as SocketIOServer } from 'socket.io';
 
 dotenv.config();
 
 const app = express();
+const server = http.createServer(app);
 
 connectDB().catch((error) => {
   console.error('❌ Failed to connect to MongoDB:', error.message);
@@ -59,6 +63,28 @@ app.use((err, req, res, next) => {
     message: 'Something went wrong!',
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
   });
+});
+const io = new SocketIOServer(server, {
+  cors: {
+    origin: allowedOrigins,
+    credentials: true,
+  },
+});
+
+app.set('io', io); // <- để controller dùng: req.app.get('io')
+
+io.on('connection', (socket) => {
+  console.log('🔌  Socket connected:', socket.id);
+
+  socket.on('joinRoom', (roomId) => socket.join(roomId));
+
+  socket.on('chatMessage', ({ roomId, message }) => {
+    socket.to(roomId).emit('newMessage', message);
+  });
+
+  socket.on('disconnect', () =>
+    console.log('❌  Socket disconnected:', socket.id)
+  );
 });
 
 // Start server

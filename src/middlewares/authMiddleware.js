@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import User from '../models/User.js';
 // Parse and verify token
 export const protect = async (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -9,9 +10,15 @@ export const protect = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.SECRET_KEY);
+    const userDoc = await User.findById(decoded.userId || decoded._id).select(
+      '-password'
+    );
+    if (!userDoc) return res.status(401).send('User not found');
+    req.user = userDoc;
     req.authenticatedUser = decoded;
     next();
   } catch (error) {
+    console.error('JWT verify error:', error.message);
     res.status(403).send('Forbidden: Invalid Token');
   }
 };
