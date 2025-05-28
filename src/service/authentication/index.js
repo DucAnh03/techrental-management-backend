@@ -74,7 +74,7 @@ export const verifyUser = async (token) => {
     user.identityVerification.verifiedAt = new Date();
     await user.save();
 
-    return { code: 200, message: 'Tài khoản đã được xác minh' };
+    return { code: 200, message: 'Tài khoản đã được xác minh', metadata: user };
   } catch (err) {
     return { code: 400, message: 'Token không hợp lệ hoặc đã hết hạn' };
   }

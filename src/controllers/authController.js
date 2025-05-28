@@ -13,6 +13,7 @@ import {
 } from '../service/authentication/index.js';
 import User from '../models/User.js';
 import bcrypt from 'bcryptjs';
+import ProductDetail from '../models/ProductDetail.js';
 
 // Register User
 // this function just send mail to user not exist in database
@@ -90,7 +91,24 @@ export const loginController = async (req, res) => {
 export const verifyUserController = async (req, res) => {
   const { token } = req.params;
   const result = await verifyUser(token);
-  res.status(result.code).send(result.message);
+  const user = result.metadata;
+  const ownedProductsCount = await ProductDetail.countDocuments({ owner: user._id });
+  const rentingProductsCount = await ProductDetail.countDocuments({ renters: user._id });
+
+  res.status(result.code).json({
+    _id: user._id.toString(),
+    fullname: user.identityVerification?.status === 'verified' ? user.name : undefined,
+    name: user.name,
+    email: user.email,
+    roles: user.roles,
+    joinDate: user.createdAt.toISOString(),
+    phone: user.phone || '',
+    address: user.identityVerification?.address || '',
+    isVerified: user.identityVerification?.status === 'verified',
+    ownedProducts: ownedProductsCount || 0,
+    rentingProducts: rentingProductsCount || 0,
+    registeredLessor: user.roles.includes('owner'),
+  });
 };
 
 // Forgot Password

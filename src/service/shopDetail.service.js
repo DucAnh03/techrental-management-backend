@@ -44,14 +44,7 @@ const getShopDetailById = async (_id) => {
     throw error;
   }
 };
-const getAllShopDetailByIdShop = async (_id) => {
-  try {
-    const shopDetails = await ShopDetail.find({ idShop: _id });
-    return shopDetails;
-  } catch (error) {
-    throw error;
-  }
-};
+
 const getShopDetailByUserId = async (userId) => {
   return await ShopDetail.findOne({ idUser: userId });
 };
@@ -60,7 +53,6 @@ export default {
   createShopDetail,
   deleteShopDetailById,
   getAllShopDetail,
-  getAllShopDetailByIdShop,
   getShopDetailById,
   getShopDetailByUserId,
 };

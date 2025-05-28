@@ -2,10 +2,9 @@ import User from '../../models/User.js';
 import ShopDetail from '../../models/ShopDetail.js';
 import { sendVerificationEmail } from '../../utils/mailer.js';
 
-import jwt from 'jsonwebtoken';
-
 export const getCurrentUser = async (userId) => {
-  return await User.findById(userId).select('-password');
+  const user = await User.findById(userId).select('-password');
+  return user
 };
 
 export const getAllUsers = async () => {
