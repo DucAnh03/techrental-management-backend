@@ -1,4 +1,6 @@
+import _ from 'lodash';
 import ProductDetail from '../models/ProductDetail.js';
+import User from '../models/User.js';
 import {
   getCurrentUser,
   getAllUsers,
@@ -11,12 +13,19 @@ export const getCurrentUserController = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'Không tìm thấy người dùng' });
     }
-    const ownedProductsCount = await ProductDetail.countDocuments({ owner: req.authenticatedUser.userId });
-    const rentingProductsCount = await ProductDetail.countDocuments({ renters: req.authenticatedUser.userId });
+    const ownedProductsCount = await ProductDetail.countDocuments({
+      owner: req.authenticatedUser.userId,
+    });
+    const rentingProductsCount = await ProductDetail.countDocuments({
+      renters: req.authenticatedUser.userId,
+    });
 
     res.status(200).json({
       _id: user._id.toString(),
-      fullname: user.identityVerification?.status === 'verified' ? user.name : undefined,
+      fullname:
+        user.identityVerification?.status === 'verified'
+          ? user.name
+          : undefined,
       name: user.name,
       email: user.email,
       roles: user.roles,
@@ -27,6 +36,9 @@ export const getCurrentUserController = async (req, res) => {
       ownedProducts: ownedProductsCount || 0,
       rentingProducts: rentingProductsCount || 0,
       registeredLessor: user.roles.includes('owner'),
+      avatar: user.avatar,
+      gender: user.gender,
+      // dateOfBirth: user.dateOfBirth?.toISOString(),
     });
   } catch (error) {
     res.status(500).json({ message: 'Lỗi server', error: error.message });
@@ -57,8 +69,12 @@ export const becomeOwnerController = async (req, res) => {
 
     const user = await getCurrentUser(userId);
 
-    const ownedProductsCount = await ProductDetail.countDocuments({ owner: userId });
-    const rentingProductsCount = await ProductDetail.countDocuments({ renters: userId });
+    const ownedProductsCount = await ProductDetail.countDocuments({
+      owner: userId,
+    });
+    const rentingProductsCount = await ProductDetail.countDocuments({
+      renters: userId,
+    });
 
     return res.status(201).json({
       success: true,
@@ -66,7 +82,10 @@ export const becomeOwnerController = async (req, res) => {
       data: {
         user: {
           _id: user._id.toString(),
-          fullname: user.identityVerification?.status === 'verified' ? user.name : undefined,
+          fullname:
+            user.identityVerification?.status === 'verified'
+              ? user.name
+              : undefined,
           name: user.name,
           email: user.email,
           roles: user.roles,
@@ -80,7 +99,7 @@ export const becomeOwnerController = async (req, res) => {
         },
         shop: {
           _id: user._id.toString(),
-          ...shop
+          ...shop,
         },
       },
     });
@@ -89,5 +108,63 @@ export const becomeOwnerController = async (req, res) => {
       success: false,
       message: error.message,
     });
+  }
+};
+
+export const updateUserController = async (req, res) => {
+  try {
+    const userId = req.user?._id;
+    console.log('userId', userId);
+    const updates = req.body;
+    console.log('updates', updates);
+
+    const protectedFields = [
+      'password',
+      'email',
+      'resetCode',
+      'resetCodeExpiry',
+    ];
+    protectedFields.forEach((field) => {
+      if (field in updates) delete updates[field];
+    });
+
+    const updatedUser = await User.findByIdAndUpdate(userId, updates, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!updatedUser) {
+      return res
+        .status(404)
+        .json({ success: false, message: 'User not found' });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'User updated successfully',
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error('Error updating user:', error);
+    res
+      .status(500)
+      .json({ success: false, message: 'Server error', error: error.message });
+  }
+};
+
+export const getUserById = async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'Không tìm thấy người dùng' });
+    }
+
+    const safeUser = _.omit(user.toObject(), ['password']);
+
+    res.status(200).json({ user: safeUser });
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi server', error: error.message });
   }
 };
