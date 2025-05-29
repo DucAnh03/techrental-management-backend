@@ -1,9 +1,6 @@
-// src/models/ChatRoom.js   ︙ ES-module
 import mongoose from 'mongoose';
 
-// 👇 PHẢI có Types ở đây
 const { Schema, model, Types } = mongoose;
-//                     ^^^^^^
 
 const ChatRoomSchema = new Schema(
   {

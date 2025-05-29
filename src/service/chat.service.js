@@ -33,6 +33,21 @@ export function findMessages(roomId) {
   return Message.find({ roomId: toObjectId(roomId) }).sort({ createdAt: 1 });
 }
 
+export async function findAllRoomsByShop(shopOwnerId) {
+  const shop = await Shop.findOne({ idUser: toObjectId(shopOwnerId) });
+  if (!shop) {
+    console.error('Không tìm thấy shop với idUser:', shopOwnerId);
+    throw new Error('SHOP_NOT_FOUND');
+  }
+
+  console.log('Shop của owner:', shop._id);
+
+  return ChatRoom.find({ shopId: shop._id })
+    .populate('userId', 'name avatar email')
+    .populate('shopId', 'name avatar')
+    .sort({ lastMessageTime: -1 });
+}
+
 export async function createMessage(roomId, senderId, senderType, content) {
   if (!content) throw new Error('EMPTY_CONTENT');
 
@@ -44,6 +59,7 @@ export async function createMessage(roomId, senderId, senderType, content) {
     senderId: senderObj,
     senderType,
     content,
+    readBy: [senderId],
   });
 
   await ChatRoom.findByIdAndUpdate(roomObj, {
