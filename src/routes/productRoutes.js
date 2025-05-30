@@ -4,7 +4,7 @@ import { ensureVerifiedUser, protect } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-router.post("/", createProduct);
+router.post("/", protect, ensureVerifiedUser, createProduct);
 router.post("/createMany", protect, ensureVerifiedUser, createManyProduct);
 router.delete("/:_id", protect, ensureVerifiedUser, deleteProductById);
 router.get("/", getAllProduct);

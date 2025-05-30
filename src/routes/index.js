@@ -6,6 +6,7 @@ import shopDetail from './shopDetailRoutes.js';
 import cloudinaryRouter from './cloudinaryRouter.js';
 import userRouter from './userRoutes.js';
 import chatRouter from './chatRoutes.js';
+import orderProductRoutes from './orderProduct.routes.js';
 
 import categoryRouter from './categoryRoutes.js';
 import { ensureVerifiedUser, protect } from '../middlewares/authMiddleware.js';
@@ -19,5 +20,5 @@ router.use('/shopDetail', shopDetail);
 router.use('/cloudinary', cloudinaryRouter);
 router.use('/users', userRouter);
 router.use('/chatrooms', chatRouter);
-
+router.use('/order-products', orderProductRoutes);
 export default router;

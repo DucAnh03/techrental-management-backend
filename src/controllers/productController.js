@@ -2,14 +2,19 @@ import service from '../service/product.service.js';
 
 export const createProduct = async (req, res) => {
     try {
-        const newProductReview = await service.createProduct(req.body);
+        const productData = req.body;
+        const result = await service.createProduct(productData);
+
         res.status(201).json({
-            message: "Product created successfully",
-            metadata: newProductReview,
+            success: true,
+            message: 'Product and orders created successfully',
+            data: result,
         });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Internal server error" });
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
     }
 };
 export const createManyProduct = async (req, res) => {

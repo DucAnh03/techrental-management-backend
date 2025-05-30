@@ -38,7 +38,7 @@ export const authorizeRoles = (...roles) => {
 
 // Ensure email verified
 export const ensureVerifiedUser = (req, res, next) => {
-  if (req.authenticatedUser.verify === true) {
+  if (req.authenticatedUser.verify === true || req.authenticatedUser.isVerified === true) {
     next();
   } else {
     res.status(401).send('User not verified');

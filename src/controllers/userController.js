@@ -128,10 +128,24 @@ export const updateUserController = async (req, res) => {
       if (field in updates) delete updates[field];
     });
 
-    const updatedUser = await User.findByIdAndUpdate(userId, updates, {
-      new: true,
-      runValidators: true,
-    });
+    if (updates.identityVerification) {
+      const user = await User.findById(userId);
+      if (user) {
+        updates.identityVerification = {
+          ...user.identityVerification?.toObject?.() || user.identityVerification || {},
+          ...updates.identityVerification,
+        };
+      }
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      updates,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
 
     if (!updatedUser) {
       return res

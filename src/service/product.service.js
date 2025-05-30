@@ -1,9 +1,26 @@
+import OrderProduct from '../models/OrderProduct.js';
 import ProductDetail from '../models/ProductDetail.js';
 import { v2 as cloudinary } from 'cloudinary';
 
 export const createProduct = async (productData) => {
-    const newProduct = new ProductDetail(productData);
-    return await newProduct.save();
+    const { stock, ...productDetails } = productData;
+    console.log("stock", stock)
+    const newProduct = new ProductDetail({ ...productDetails, stock });
+    const savedProduct = await newProduct.save();
+
+    const orderProducts = [];
+    for (let i = 0; i < stock; i++) {
+        const unitId = `${savedProduct._id}-${i + 1}`;
+        const newOrderProduct = new OrderProduct({
+            productId: savedProduct._id,
+            unitId,
+            productStatus: 'available',
+        });
+        const savedOrderProduct = await newOrderProduct.save();
+        orderProducts.push(savedOrderProduct);
+    }
+
+    return { product: savedProduct, orders: orderProducts };
 };
 export const createManyProduct = async (productData) => {
     try {
