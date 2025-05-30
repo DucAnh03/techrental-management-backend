@@ -9,7 +9,6 @@ import chatRouter from './chatRoutes.js';
 import orderProductRoutes from './orderProduct.routes.js';
 
 import categoryRouter from './categoryRoutes.js';
-import { ensureVerifiedUser, protect } from '../middlewares/authMiddleware.js';
 const router = express.Router();
 
 router.use('/auth', authRouter);

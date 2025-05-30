@@ -64,6 +64,22 @@ export const getAllProduct = async (req, res) => {
         return res.status(500).json({ message: "Internal server error" });
     }
 };
+export const getAllProductAprove = async (req, res) => {
+    try {
+        const products = await service.getAllProductAprove();
+        if (!products || products.length === 0) {
+            return res.status(404).json({ message: "No products found" });
+        }
+
+        return res.status(200).json({
+            message: "Products retrieved successfully",
+            metadata: products,
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: "Internal server error" });
+    }
+};
 
 export const getProductById = async (req, res) => {
     try {

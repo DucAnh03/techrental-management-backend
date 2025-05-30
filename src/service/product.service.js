@@ -65,6 +65,12 @@ export const getAllProduct = async () => {
         .populate("idShop")
         .populate("category").populate('reviews');
 };
+export const getAllProductAprove = async () => {
+    return await ProductDetail.find({ adminApprovalStatus: "approved" })
+        .populate("idShop")
+        .populate("category")
+        .populate("reviews");
+};
 
 export const getProductById = async (_id) => {
     try {
@@ -83,4 +89,4 @@ export const getAllProductByIdShop = async (_id) => {
         .populate("category").populate('reviews');
 };
 
-export default { createProduct, deleteProductById, getAllProduct, getProductById, getAllProductByIdShop, createManyProduct };
+export default { createProduct, deleteProductById, getAllProduct, getProductById, getAllProductByIdShop, createManyProduct, getAllProductAprove };
