@@ -168,16 +168,17 @@ export const updateUserController = async (req, res) => {
 
 export const getUserById = async (req, res) => {
   try {
-    const userId = req.params.id;
+    const userId = req.params._id;
 
-    const user = await User.findById(userId);
+    const user = await User.findOne({ _id: userId });
+
     if (!user) {
       return res.status(404).json({ message: 'Không tìm thấy người dùng' });
     }
 
     const safeUser = _.omit(user.toObject(), ['password']);
-
     res.status(200).json({ user: safeUser });
+
   } catch (error) {
     res.status(500).json({ message: 'Lỗi server', error: error.message });
   }
