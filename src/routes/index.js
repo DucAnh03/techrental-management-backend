@@ -6,7 +6,8 @@ import shopDetail from './shopDetailRoutes.js';
 import cloudinaryRouter from './cloudinaryRouter.js';
 import userRouter from './userRoutes.js';
 import chatRouter from './chatRoutes.js';
-import orderProductRoutes from './orderProduct.routes.js';
+import UnitProductRoutes from './UnitProduct.routes.js';
+import orderRoutes from './orderRoutes.js';
 
 import categoryRouter from './categoryRoutes.js';
 const router = express.Router();
@@ -19,5 +20,7 @@ router.use('/shopDetail', shopDetail);
 router.use('/cloudinary', cloudinaryRouter);
 router.use('/users', userRouter);
 router.use('/chatrooms', chatRouter);
-router.use('/order-products', orderProductRoutes);
+router.use('/order-products', UnitProductRoutes);
+
+router.use('/orders', orderRoutes);
 export default router;
