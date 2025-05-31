@@ -38,41 +38,71 @@ export async function getMessages(req, res) {
 
 export async function sendMessage(req, res) {
   try {
-    console.log('📥 params:', req.params);
-    console.log('📥 body:', req.body);
-
     const { roomId } = req.params;
-    // ghép body.data (Postman) hoặc body thẳng
-    const body = req.body.data || req.body;
-    const { content, shopId } = body;
+    const { content } = req.body;
+    const userId = req.user._id;
+    const roles = req.user.roles || [];
 
-    // ← Thêm 2 dòng này:
-    const userId = req.user?._id;
-    const userRoles = req.user?.roles || [];
-
-    if (!userId) return res.status(401).json({ message: 'Unauthorized' });
-    if (!roomId && !shopId)
-      return res.status(400).json({ message: 'Missing roomId or shopId' });
     if (!content?.trim())
-      return res.status(400).json({ message: 'Content is required' });
+      return res.status(400).json({ message: 'Content required' });
 
-    // …phần load room, xác định senderType, tạo message, v.v.
+    const room = await ChatRoom.findById(roomId);
+    if (!room) return res.status(404).json({ message: 'Room not found' });
+
+    let myShop = null;
+    if (roles.includes('owner')) {
+      myShop = await Shop.findOne({ idUser: userId });
+    }
+
+    let senderType = null;
+
+    // (a)
+    if (String(room.userId) === String(userId)) {
+      senderType = 'user';
+    }
+
+    // (b)
+    if (myShop && String(myShop._id) === String(room.shopId)) {
+      senderType = 'shop';
+    }
+
+    if (!senderType) {
+      return res.status(403).json({ message: 'Not allowed in this room' });
+    }
+
+    const msg = await chatSrv.createMessage(
+      roomId,
+      userId,
+      senderType,
+      content.trim()
+    );
+
+    if (req.io) req.io.to(roomId).emit('newMessage', { roomId, data: msg });
+    return res.status(201).json(msg);
   } catch (err) {
-    console.error('🔥 SendMessage error:', err);
-    return res.status(500).json({ message: err.message || 'Server error' });
+    console.error('🔥 sendMessage error:', err);
+    res.status(500).json({ message: 'Server error' });
   }
 }
 
 export async function getRoomsByShop(req, res) {
   try {
-    const rooms = await chatSrv.findAllRoomsByShop(req.user._id); // ✅
+    const shopId = req.query.shopId || req.body?.shopId;
+    if (!shopId) return res.status(400).json({ message: 'Missing shopId' });
+
+    const rooms = await ChatRoom.find({ shopId })
+      .populate('userId', 'name avatar email')
+      .populate('shopId', 'name avatar')
+      .sort({ lastMessageTime: -1 });
+
     console.log('🧪 Trả về room shop:', rooms);
-    res.json(rooms);
+    return res.json(rooms);
   } catch (err) {
-    console.error(err);
+    console.error('❌ getRoomsByShop error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 }
+
 export async function getRoomsByShopId(req, res) {
   try {
     const shopId = req.params.shopId;
