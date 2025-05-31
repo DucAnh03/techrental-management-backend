@@ -1,3 +1,5 @@
+import moment from 'moment';
+import User from '../models/User.js';
 import {
   updateOrderStatus,
   getProductsFromOrder,
@@ -7,12 +9,15 @@ import {
   getOrdersByRenterId,
   getOrderWithRenterDetails,
 } from '../service/order.service.js';
-
+import { sendOrderApprovedEmail } from '../utils/mailer.js';
+import qs from 'qs';
+import crypto from 'crypto';
 export const getOrdersByUserIdController = async (req, res) => {
   try {
     const { userId } = req.params;
 
     const orders = await getOrdersByUserId(userId);
+    console.log(orders);
     if (!orders || orders.length === 0) {
       return res
         .status(404)
@@ -56,12 +61,26 @@ export const updateOrderStatusController = async (req, res) => {
   try {
     const { orderId } = req.params;
     const { status } = req.body;
+    console.log('recived status:', status);
+    console.log('recived orderId', orderId);
 
     const updatedOrder = await updateOrderStatus(orderId, status);
     if (!updatedOrder) {
       return res
         .status(404)
         .json({ success: false, message: 'Order not found' });
+    }
+
+    const userId = req.body.toId;
+    console.log('TO ID', userId);
+
+    const foundUser = await User.findById(userId);
+
+    console.log("foundUser", foundUser);
+
+    if (status == 'pending_payment') {
+      console.log('SENDING EMAIL');
+      await sendOrderApprovedEmail(foundUser.email, orderId, userId);
     }
 
     res.status(200).json({ success: true, data: updatedOrder });
