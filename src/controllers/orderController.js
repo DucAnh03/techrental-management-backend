@@ -1,5 +1,17 @@
 import { updateOrderStatus, getProductsFromOrder, getAllOrderedProducts } from '../service/order.service.js';
 
+
+export const createOrderController = async (req, res) => {
+    try {
+        const orderData = req.body;
+
+        const newOrder = await createOrder(orderData);
+        res.status(201).json({ success: true, data: newOrder });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 export const updateOrderStatusController = async (req, res) => {
     try {
         const { orderId } = req.params;

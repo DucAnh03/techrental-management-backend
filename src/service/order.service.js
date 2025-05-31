@@ -33,3 +33,12 @@ export const getProductsFromOrder = async (orderId) => {
         throw error;
     }
 };
+
+export const createOrder = async (orderData) => {
+    try {
+        const newOrder = new Order(orderData);
+        return await newOrder.save();
+    } catch (error) {
+        throw error;
+    }
+};
