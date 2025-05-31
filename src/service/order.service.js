@@ -1,10 +1,14 @@
+import Order from '../models/Order.js';
+
 export const updateOrderStatus = async (orderId, newStatus) => {
     try {
-        const order = await Order.findByIdAndUpdate(
-            orderId,
-            { status: newStatus },
-            { new: true, runValidators: true }
-        );
+        const updateData = { status: newStatus };
+
+        if (newStatus === 'before_deadline') {
+            updateData.deliveryDate = new Date();
+        }
+
+        const order = await Order.findByIdAndUpdate(orderId, updateData, { new: true, runValidators: true });
         return order;
     } catch (error) {
         throw error;

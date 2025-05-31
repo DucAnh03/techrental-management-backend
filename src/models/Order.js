@@ -10,6 +10,8 @@ const OrderSchema = new mongoose.Schema(
             enum: ['completed', 'pending_payment', 'pending_confirmation', 'in_delivery', 'return_product', 'canceled', 'before_deadline'],
             default: 'pending_confirmation',
         },
+        duration: { type: Number, required: true },
+        deliveryDate: { type: Date },
     },
     {
         collection: 'orders',
