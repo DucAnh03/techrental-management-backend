@@ -42,3 +42,20 @@ export const createOrder = async (orderData) => {
         throw error;
     }
 };
+export const getOrdersByUserId = async (userId) => {
+    try {
+        const orders = await Order.find({ customerId: userId }).populate('products');
+        return orders;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const getOrdersByRenterId = async (renterId) => {
+    try {
+        const orders = await Order.find({ 'products.renterId': renterId }).populate('products');
+        return orders;
+    } catch (error) {
+        throw error;
+    }
+};
