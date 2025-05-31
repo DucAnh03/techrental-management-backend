@@ -16,10 +16,10 @@ import bcrypt from 'bcryptjs';
 import ProductDetail from '../models/ProductDetail.js';
 
 // Register User
-// this function just send mail to user not exist in database
 export const registerController = async (req, res) => {
   try {
     const { username, password, email, phoneNumber, address } = req.body;
+
     const result = await registerService(
       username,
       password,
@@ -29,21 +29,13 @@ export const registerController = async (req, res) => {
     );
 
     if (result.status) {
-      const tokenResponse = await sendToken(email, result.payload._id);
-      res.status(201).json({
-        message: tokenResponse.warning
-          ? 'Tạo tài khoản thành công nhưng không gửi được email xác minh'
-          : 'Đăng ký thành công, vui lòng xác minh email',
-        user: result.payload,
-        token: tokenResponse.payload.token,
+      return res.status(201).json({
+        message: 'Đăng ký thành công, vui lòng kiểm tra email để xác minh',
       });
-    } else {
-      res
-        .status(400)
-        .json({ message: 'Registration failed', error: result.message });
     }
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(400).json({ message: result.message });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
 
@@ -91,23 +83,36 @@ export const loginController = async (req, res) => {
 export const verifyUserController = async (req, res) => {
   const { token } = req.params;
   const result = await verifyUser(token);
-  const user = result.metadata;
-  const ownedProductsCount = await ProductDetail.countDocuments({ owner: user._id });
-  const rentingProductsCount = await ProductDetail.countDocuments({ renters: user._id });
 
-  res.status(result.code).json({
-    _id: user._id.toString(),
-    fullname: user.identityVerification?.status === 'verified' ? user.name : undefined,
-    name: user.name,
-    email: user.email,
-    roles: user.roles,
-    joinDate: user.createdAt.toISOString(),
-    phone: user.phone || '',
-    address: user.identityVerification?.address || '',
-    isVerified: user.identityVerification?.status === 'verified',
-    ownedProducts: ownedProductsCount || 0,
-    rentingProducts: rentingProductsCount || 0,
-    registeredLessor: user.roles.includes('owner'),
+  if (result.code !== 200 && result.code !== 201) {
+    // Token lỗi hoặc hết hạn
+    return res.status(result.code).json({ message: result.message });
+  }
+  return res.status(result.code).json({ message: result.message });
+
+  const user = result.metadata;
+
+  // Thống kê sản phẩm (có thể bỏ nếu chưa cần)
+  const ownedProducts = await ProductDetail.countDocuments({ owner: user._id });
+  const rentingProducts = await ProductDetail.countDocuments({
+    renters: user._id,
+  });
+
+  return res.status(result.code).json({
+    message: result.message,
+    user: {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      roles: user.roles,
+      isVerified: true,
+      joinDate: user.createdAt.toISOString(),
+      phone: user.phone || '',
+      address: user.address || '',
+      ownedProducts,
+      rentingProducts,
+      registeredLessor: user.roles.includes('owner'),
+    },
   });
 };
 
