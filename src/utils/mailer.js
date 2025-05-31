@@ -41,3 +41,22 @@ export const sendResetCodeEmail = async (to, code) => {
   });
   return code; // để Controller lưu vào DB
 };
+
+export const sendOrderApprovedEmail = async (to, orderId, userId) => {
+  const orderLink = `${CLIENT_URL}/personal/${userId}/orders`;
+  await transporter.sendMail({
+    from: `"TechRental" <${process.env.SMTP_MAIL}>`,
+    to,
+    subject: 'Đơn hàng của bạn đã được duyệt - TechRental',
+    html: `
+      <h3>Xin chào,</h3>
+      <p>Đơn hàng <strong>${orderId}</strong> của bạn đã được <strong>duyệt</strong>.</p>
+      <p>Vui lòng truy cập để <strong>thanh toán</strong> và hoàn tất thủ tục thuê:</p>
+      <a href="${orderLink}" target="_blank">${orderLink}</a>
+      <p>Nếu bạn có bất kỳ câu hỏi nào, đừng ngần ngại liên hệ với chúng tôi.</p>
+      <br/>
+      <p>Trân trọng,</p>
+      <p><strong>TechRental Team</strong></p>
+    `,
+  });
+};

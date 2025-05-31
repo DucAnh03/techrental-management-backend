@@ -35,7 +35,6 @@ export const deleteShopDetailById = async (req, res) => {
   }
 };
 export const getAllShopDetail = async (req, res) => {
-  console.log('first', req.user);
   try {
     const shopDetails = await service.getAllShopDetail();
     if (!shopDetails || shopDetails.length === 0) {
@@ -89,7 +88,6 @@ export const getAllShopDetailByIdShop = async (req, res) => {
 export const getMyShopDetail = async (req, res) => {
   try {
     const userId = req.authenticatedUser?.userId || req.user?._id;
-    console.log("first", userId)
     if (!userId) return res.status(401).json({ message: 'Unauthorized' });
 
     const shop = await service.getShopDetailByUserId(userId);

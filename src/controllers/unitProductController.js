@@ -1,27 +1,27 @@
 import {
-    createOrderProduct,
-    getOrderProductById,
-    updateOrderProductById,
-    deleteOrderProductById,
-    getAllOrderProducts,
-    getOrderProductByUnitId,
-    getOrderProductsByProductIds,
-} from '../service/orderProduct.service.js';
+    createUnitProduct,
+    getUnitProductById,
+    updateUnitProductById,
+    deleteUnitProductById,
+    getAllUnitProducts,
+    getUnitProductByUnitId,
+    getUnitProductsByProductIds,
+} from '../service/unitProduct.service.js';
 
-export const createOrderProductController = async (req, res) => {
+export const createUnitProductController = async (req, res) => {
     try {
         const orderData = req.body;
-        const newOrder = await createOrderProduct(orderData);
+        const newOrder = await createUnitProduct(orderData);
         res.status(201).json({ success: true, data: newOrder });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
 };
 
-export const getOrderProductByIdController = async (req, res) => {
+export const getUnitProductByIdController = async (req, res) => {
     try {
         const orderId = req.params.id;
-        const order = await getOrderProductById(orderId);
+        const order = await getUnitProductById(orderId);
         if (!order) {
             return res.status(404).json({ success: false, message: 'Order not found' });
         }
@@ -31,11 +31,11 @@ export const getOrderProductByIdController = async (req, res) => {
     }
 };
 
-export const updateOrderProductController = async (req, res) => {
+export const updateUnitProductController = async (req, res) => {
     try {
         const orderId = req.params.id;
         const updateData = req.body;
-        const updatedOrder = await updateOrderProductById(orderId, updateData);
+        const updatedOrder = await updateUnitProductById(orderId, updateData);
         if (!updatedOrder) {
             return res.status(404).json({ success: false, message: 'Order not found' });
         }
@@ -45,10 +45,10 @@ export const updateOrderProductController = async (req, res) => {
     }
 };
 
-export const deleteOrderProductController = async (req, res) => {
+export const deleteUnitProductController = async (req, res) => {
     try {
         const orderId = req.params.id;
-        const deletedOrder = await deleteOrderProductById(orderId);
+        const deletedOrder = await deleteUnitProductById(orderId);
         if (!deletedOrder) {
             return res.status(404).json({ success: false, message: 'Order not found' });
         }
@@ -57,7 +57,7 @@ export const deleteOrderProductController = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
-export const getOrderProductsByProductIdsController = async (req, res) => {
+export const getUnitProductsByProductIdsController = async (req, res) => {
     try {
         const { id } = req.body;
 
@@ -65,16 +65,16 @@ export const getOrderProductsByProductIdsController = async (req, res) => {
             return res.status(400).json({ success: false, message: 'id must be a non-empty array' });
         }
 
-        const orders = await getOrderProductsByProductIds(id);
+        const orders = await getUnitProductsByProductIds(id);
 
         res.status(200).json({ success: true, data: orders });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
 };
-export const getAllOrderProductsController = async (req, res) => {
+export const getAllUnitProductsController = async (req, res) => {
     try {
-        const orders = await getAllOrderProducts();
+        const orders = await getAllUnitProducts();
         res.status(200).json({ success: true, data: orders });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -82,10 +82,10 @@ export const getAllOrderProductsController = async (req, res) => {
 };
 
 
-export const getOrderProductByUnitIdController = async (req, res) => {
+export const getUnitProductByUnitIdController = async (req, res) => {
     try {
         const { unitId } = req.params;
-        const order = await getOrderProductByUnitId(unitId);
+        const order = await getUnitProductByUnitId(unitId);
 
         if (!order) {
             return res.status(404).json({ success: false, message: 'Order not found for this unitId' });
