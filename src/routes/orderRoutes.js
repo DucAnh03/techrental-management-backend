@@ -5,13 +5,10 @@ import {
   getAllOrderedProductsController,
   createPaymentController,
   vnpayReturnController,
-  updateOrderStatusController,
-  getProductsFromOrderController,
-  getAllOrderedProductsController,
-  createOrderController,
   getOrdersByUserIdController,
   getOrdersByRenterIdController,
   getOrderWithRenterDetailsController,
+  createOrderController,
 } from '../controllers/orderController.js';
 
 const router = express.Router();
