@@ -1,4 +1,4 @@
-import { updateOrderStatus, getProductsFromOrder, getAllOrderedProducts, createOrder, getOrdersByUserId, getOrdersByRenterId } from '../service/order.service.js';
+import { updateOrderStatus, getProductsFromOrder, getAllOrderedProducts, createOrder, getOrdersByUserId, getOrdersByRenterId, getOrderWithRenterDetails } from '../service/order.service.js';
 
 
 export const getOrdersByUserIdController = async (req, res) => {
@@ -70,6 +70,22 @@ export const getAllOrderedProductsController = async (req, res) => {
     try {
         const products = await getAllOrderedProducts();
         res.status(200).json({ success: true, data: products });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+
+export const getOrderWithRenterDetailsController = async (req, res) => {
+    try {
+        const { orderId } = req.params;
+
+        const order = await getOrderWithRenterDetails(orderId);
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found' });
+        }
+
+        res.status(200).json({ success: true, data: order });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }

@@ -9,6 +9,7 @@ const UnitProductSchema = new mongoose.Schema(
             enum: ['available', 'rented'],
             required: true,
         },
+        renterId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     },
     {
         collection: 'unitProduct',

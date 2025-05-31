@@ -1,4 +1,5 @@
 import Order from '../models/Order.js';
+import UnitProduct from '../models/UnitProduct.js';
 
 export const updateOrderStatus = async (orderId, newStatus) => {
     try {
@@ -50,11 +51,36 @@ export const getOrdersByUserId = async (userId) => {
         throw error;
     }
 };
-
 export const getOrdersByRenterId = async (renterId) => {
     try {
-        const orders = await Order.find({ 'products.renterId': renterId }).populate('products');
+        const unitProducts = await UnitProduct.find({ renterId });
+
+        const unitProductIds = unitProducts.map(unit => unit._id);
+
+        console.log("first", unitProductIds)
+        const orders = await Order.find({ products: { $in: unitProductIds } }).populate('products');
+
         return orders;
+    } catch (error) {
+        throw error;
+    }
+};
+export const getOrderWithRenterDetails = async (orderId) => {
+    try {
+        const order = await Order.findById(orderId)
+            .populate({
+                path: 'products',
+                populate: {
+                    path: 'renterId',
+                    model: 'User',
+                },
+            });
+
+        if (!order) {
+            throw new Error('Order not found');
+        }
+
+        return order;
     } catch (error) {
         throw error;
     }
