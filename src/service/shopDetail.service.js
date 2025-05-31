@@ -2,10 +2,6 @@ import ShopDetail from '../models/ShopDetail.js';
 
 const createShopDetail = async (user, data) => {
   try {
-    console.log('first', user);
-    console.log('Received user in service:', user);
-    console.log('user._id:', user?._id);
-
     const shopDetail = await ShopDetail.create({
       idUser: user.userId,
       contact: {

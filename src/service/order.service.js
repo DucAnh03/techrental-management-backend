@@ -57,7 +57,6 @@ export const getOrdersByRenterId = async (renterId) => {
 
         const unitProductIds = unitProducts.map(unit => unit._id);
 
-        console.log("first", unitProductIds)
         const orders = await Order.find({ products: { $in: unitProductIds } }).populate('products');
 
         return orders;
