@@ -1,4 +1,4 @@
-import { updateOrderStatus, getProductsFromOrder, getAllOrderedProducts } from '../service/order.service.js';
+import { updateOrderStatus, getProductsFromOrder, getAllOrderedProducts, createOrder } from '../service/order.service.js';
 
 
 export const createOrderController = async (req, res) => {
