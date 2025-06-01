@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import Order from '../models/Order.js';
 import UnitProduct from '../models/UnitProduct.js';
 import ProductDetail from '../models/ProductDetail.js';
+import ShopDetail from '../models/ShopDetail.js';
 
 export const updateOrderStatus = async (orderId, newStatus) => {
   try {
@@ -73,39 +74,75 @@ export const getOrdersByUserId = async (userId) => {
 
 export const getOrdersByRenterId = async (renterId) => {
   try {
-    console.log('Finding orders for renterId:', renterId);
+    console.log('1. Searching for shop with renterId:', renterId);
+    const shopDetails = await ShopDetail.findOne({ idUser: renterId });
+    if (!shopDetails) {
+      console.log('No shop found for this renterId');
+      return [];
+    }
+    console.log('2. Found shop:', shopDetails._id);
 
-    // First find all unit products where this user is the renter
-    const unitProducts = await UnitProduct.find({ renterId }).select('_id');
-    console.log('Found unit products:', unitProducts);
-
-    const unitProductIds = unitProducts.map(up => up._id);
-    console.log('Unit product IDs:', unitProductIds);
-
-    if (!unitProductIds.length) {
-      console.log('No unit products found for this renter');
+    const products = await ProductDetail.find({ idShop: shopDetails._id }).select('_id');
+    console.log('3. Found products:', products.length, 'products');
+    if (!products.length) {
+      console.log('No products found for this shop');
       return [];
     }
 
-    // Find orders that contain any of these unit products
-    const orders = await Order.find({
-      products: { $in: unitProductIds }
-    })
-    .populate({
-      path: 'customerId',
-      select: '-password'
-    })
-    .populate({
-      path: 'products',
-      populate: {
-        path: 'productId',
-        model: 'ProductDetail'
-      }
-    })
-    .lean();
+    const productIds = products.map(p => p._id);
+    console.log('4. Product IDs:', productIds);
 
-    console.log('Found orders:', JSON.stringify(orders, null, 2));
-    return orders;
+    const unitProducts = await UnitProduct.find({
+      productId: { $in: productIds }
+    }).select('_id productId');
+    console.log('5. Found unit products:', unitProducts.length, 'units');
+
+    const unitProductIds = unitProducts.map(up => up._id);
+    if (!unitProductIds.length) {
+      console.log('No unit products found');
+      return [];
+    }
+    console.log('6. Unit product IDs:', unitProductIds);
+
+    // Thay đổi cách tìm kiếm orders
+    const allOrders = await Order.find()
+      .populate('customerId', '-password')
+      .populate({
+        path: 'products',
+        populate: {
+          path: 'productId',
+          model: 'ProductDetail',
+          select: 'title images price idShop'
+        }
+      })
+      .lean();
+
+    console.log('7. Found all orders:', allOrders.length);
+
+    // Lọc orders có products thuộc về shop
+    const filteredOrders = allOrders.filter(order => {
+      return order.products.some(product => {
+        const productShopId = product.productId?.idShop?.toString();
+        const shopId = shopDetails._id.toString();
+        console.log('Comparing shop IDs:', {
+          productShopId,
+          shopId,
+          matches: productShopId === shopId
+        });
+        return productShopId === shopId;
+      });
+    });
+
+    console.log('8. Filtered orders:', filteredOrders.length);
+    console.log('9. Order details:', filteredOrders.map(o => ({
+      id: o._id,
+      status: o.status,
+      products: o.products.length,
+      totalPrice: o.totalPrice,
+      productShops: o.products.map(p => p.productId?.idShop)
+    })));
+
+    return filteredOrders;
   } catch (error) {
     console.error('Error in getOrdersByRenterId:', error);
     throw error;
