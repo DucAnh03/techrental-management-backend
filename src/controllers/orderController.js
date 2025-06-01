@@ -12,6 +12,9 @@ import {
 import { sendOrderApprovedEmail } from '../utils/mailer.js';
 import qs from 'qs';
 import crypto from 'crypto';
+import UnitProduct from '../models/UnitProduct.js';
+import mongoose from 'mongoose';
+import Order from '../models/Order.js';
 export const getOrdersByUserIdController = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -35,6 +38,9 @@ export const getOrdersByRenterIdController = async (req, res) => {
     const { renterId } = req.params;
 
     const orders = await getOrdersByRenterId(renterId);
+
+    console.log("orders", orders);
+
     if (!orders || orders.length === 0) {
       return res
         .status(404)
@@ -47,13 +53,43 @@ export const getOrdersByRenterIdController = async (req, res) => {
   }
 };
 export const createOrderController = async (req, res) => {
-  try {
-    const orderData = req.body;
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
-    const newOrder = await createOrder(orderData);
-    res.status(201).json({ success: true, data: newOrder });
+  try {
+    const { products: productIds, ...orderPayload } = req.body;
+    const unitProductIds = [];
+
+    for (const productId of productIds) {
+      const unit = await UnitProduct.findOneAndUpdate(
+        { productId, productStatus: 'available' },
+        { productStatus: 'rented' },
+        { new: true, session }
+      );
+
+      unitProductIds.push(unit?._id);
+    }
+
+    const newOrder = await Order.create(
+      [
+        {
+          ...orderPayload,
+          products: unitProductIds,
+        },
+      ],
+      { session }
+    );
+
+    await session.commitTransaction();
+    session.endSession();
+
+
+    return res.status(201).json({ success: true, data: newOrder[0] });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    await session.abortTransaction();
+    session.endSession();
+    console.error(error);
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -76,7 +112,7 @@ export const updateOrderStatusController = async (req, res) => {
 
     const foundUser = await User.findById(userId);
 
-    console.log("foundUser", foundUser);
+    console.log('foundUser', foundUser);
 
     if (status == 'pending_payment') {
       console.log('SENDING EMAIL');

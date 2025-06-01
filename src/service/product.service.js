@@ -3,6 +3,7 @@ import ProductDetail from '../models/ProductDetail.js';
 import { v2 as cloudinary } from 'cloudinary';
 
 export const createProduct = async (productData) => {
+    console.log(productData);
     const { stock, ...productDetails } = productData;
     console.log("stock", stock)
     const newProduct = new ProductDetail({ ...productDetails, stock });
@@ -15,6 +16,7 @@ export const createProduct = async (productData) => {
             productId: savedProduct._id,
             unitId,
             productStatus: 'available',
+            renterId: productData.renterId,
         });
         const savedUnitProduct = await newUnitProduct.save();
         UnitProducts.push(savedUnitProduct);

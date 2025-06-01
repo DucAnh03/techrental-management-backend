@@ -70,21 +70,24 @@ export const getOrdersByUserId = async (userId) => {
     throw error;
   }
 };
+
 export const getOrdersByRenterId = async (renterId) => {
   try {
-    const unitProducts = await UnitProduct.find({ renterId });
+    const unitProductIds = await UnitProduct.distinct('_id', { renterId });
+    console.log(unitProductIds);
+    if (!unitProductIds.length) return [];
 
-    const unitProductIds = unitProducts.map((unit) => unit._id);
-
-    const orders = await Order.find({
-      products: { $in: unitProductIds },
-    }).populate('products');
-
-    return orders;
+   
+    const orders = await Order.find({ products: { $in: unitProductIds } })
+      .populate({
+        path: 'products',
+        match: { renterId },         
+    return orders.filter((o) => o.products.length);
   } catch (error) {
     throw error;
   }
 };
+
 export const getOrderWithRenterDetails = async (orderId) => {
   try {
     const order = await Order.findById(orderId).populate({
