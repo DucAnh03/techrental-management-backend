@@ -8,33 +8,27 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 
-export const register = async (
-  username,
-  password,
-  email,
-  address,
-  phoneNumber
-) => {
-  const existingUser = await User.findOne({ email });
-  if (existingUser) {
+export const register = async (username, password, email, address, phone) => {
+  if (await User.findOne({ email })) {
     return { status: false, message: 'Email đã tồn tại' };
   }
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const newUser = new User({
-    name: username,
-    email,
-    password: hashedPassword,
-    address,
-    phone: phoneNumber,
-    roles: ['renter'],
-    identityVerification: {
-      status: 'pending',
+
+  const hashed = await bcrypt.hash(password, 10);
+  const token = jwt.sign(
+    {
+      name: username,
+      email,
+      password: hashed,
+      address,
+      phone,
+      roles: ['renter'],
     },
-  });
+    process.env.SECRET_KEY,
+    { expiresIn: '1h' }
+  );
 
-  await newUser.save();
-
-  return { status: true, payload: newUser };
+  await sendVerificationEmail(email, token);
+  return { status: true };
 };
 
 export const login = async (usernameOrEmail, password) => {
@@ -64,19 +58,45 @@ export const sendToken = async (email, userId) => {
   }
 };
 
+// src/service/authentication/index.js
 export const verifyUser = async (token) => {
   try {
     const decoded = jwt.verify(token, process.env.SECRET_KEY);
-    const user = await User.findById(decoded.userId);
-    if (!user) return { code: 400, message: 'Không tìm thấy người dùng' };
 
-    user.identityVerification.status = 'verified';
-    user.identityVerification.verifiedAt = new Date();
-    await user.save();
+    // A. Đã có user (do resend mail)  ➜ chỉ update status
+    let user = await User.findOne({ email: decoded.email });
+    if (user) {
+      if (user.identityVerification?.status !== 'verified') {
+        user.identityVerification = {
+          status: 'verified',
+          verifiedAt: new Date(),
+        };
+        await user.save();
+      }
+      return { code: 200, message: 'Đã xác minh', metadata: user };
+    }
 
-    return { code: 200, message: 'Tài khoản đã được xác minh', metadata: user };
+    // B. Chưa có ➜ TẠO MỚI
+    user = await User.create({
+      name: decoded.name,
+      email: decoded.email,
+      password: decoded.password, // Đã hash trước khi gói token
+      address: decoded.address,
+      phone: decoded.phone,
+      roles: decoded.roles,
+      identityVerification: {
+        status: 'verified',
+        verifiedAt: new Date(),
+      },
+    });
+
+    return {
+      code: 201,
+      message: 'Tạo tài khoản & xác minh thành công',
+      metadata: user,
+    };
   } catch (err) {
-    return { code: 400, message: 'Token không hợp lệ hoặc đã hết hạn' };
+    return { code: 400, message: 'Token không hợp lệ hoặc hết hạn' };
   }
 };
 

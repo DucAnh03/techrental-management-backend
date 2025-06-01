@@ -8,7 +8,7 @@ router.use(protect);
 router.get('/', chatCtrl.getAllRooms);
 router.post('/', chatCtrl.getOrCreateRoom);
 
-router.get('/shop', chatCtrl.getRoomsByShop);
+router.get('/shop/:shopId', chatCtrl.getRoomsByShopId);
 
 router.get('/:roomId/messages', chatCtrl.getMessages);
 router.post('/:roomId/messages', chatCtrl.sendMessage);
