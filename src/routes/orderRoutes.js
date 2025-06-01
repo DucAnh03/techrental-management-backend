@@ -9,11 +9,13 @@ import {
   getOrdersByRenterIdController,
   getOrderWithRenterDetailsController,
   createOrderController,
+  getOrderByIdController,
 } from '../controllers/orderController.js';
 
 const router = express.Router();
 
 router.post('/', createOrderController);
+router.get('/:orderId', getOrderByIdController);
 router.put('/:orderId/status', updateOrderStatusController);
 router.get('/:orderId/products', getProductsFromOrderController);
 router.get('/products/all', getAllOrderedProductsController);

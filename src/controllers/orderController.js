@@ -8,6 +8,7 @@ import {
   getOrdersByUserId,
   getOrdersByRenterId,
   getOrderWithRenterDetails,
+  getOrderById,
 } from '../service/order.service.js';
 import { sendOrderApprovedEmail } from '../utils/mailer.js';
 import qs from 'qs';
@@ -39,7 +40,7 @@ export const getOrdersByRenterIdController = async (req, res) => {
 
     const orders = await getOrdersByRenterId(renterId);
 
-    console.log("orders", orders);
+    console.log('orders', orders);
 
     if (!orders || orders.length === 0) {
       return res
@@ -82,7 +83,6 @@ export const createOrderController = async (req, res) => {
 
     await session.commitTransaction();
     session.endSession();
-
 
     return res.status(201).json({ success: true, data: newOrder[0] });
   } catch (error) {
@@ -144,6 +144,10 @@ export const getAllOrderedProductsController = async (req, res) => {
 };
 export const createPaymentController = async (req, res) => {
   try {
+    const orderIdReq = req.body.orderId;
+    const customerId = req.body.customerId;
+    const type = req.body.type;
+
     process.env.TZ = 'Asia/Ho_Chi_Minh';
     const vnp_TmnCode = process.env.VNP_TMNCODE;
     const vnp_HashSecret = process.env.VNP_HASHSECRET;
@@ -190,7 +194,7 @@ export const createPaymentController = async (req, res) => {
       vnp_Locale: locale,
       vnp_CurrCode: currCode,
       vnp_TxnRef: orderId,
-      vnp_OrderInfo: 'Thanh toan cho ma GD:' + orderId,
+      vnp_OrderInfo: orderIdReq + '|' + customerId + '|' + type,
       vnp_OrderType: 'other',
       vnp_Amount: amount * 100000,
       vnp_ReturnUrl: returnUrl,
@@ -270,6 +274,17 @@ export const getOrderWithRenterDetailsController = async (req, res) => {
         .status(404)
         .json({ success: false, message: 'Order not found' });
     }
+
+    res.status(200).json({ success: true, data: order });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getOrderByIdController = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const order = await getOrderById(orderId);
 
     res.status(200).json({ success: true, data: order });
   } catch (error) {

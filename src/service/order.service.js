@@ -73,17 +73,41 @@ export const getOrdersByUserId = async (userId) => {
 
 export const getOrdersByRenterId = async (renterId) => {
   try {
-    const unitProductIds = await UnitProduct.distinct('_id', { renterId });
-    console.log(unitProductIds);
-    if (!unitProductIds.length) return [];
+    console.log('Finding orders for renterId:', renterId);
 
-   
-    const orders = await Order.find({ products: { $in: unitProductIds } })
-      .populate({
-        path: 'products',
-        match: { renterId },         
-    return orders.filter((o) => o.products.length);
+    // First find all unit products where this user is the renter
+    const unitProducts = await UnitProduct.find({ renterId }).select('_id');
+    console.log('Found unit products:', unitProducts);
+
+    const unitProductIds = unitProducts.map(up => up._id);
+    console.log('Unit product IDs:', unitProductIds);
+
+    if (!unitProductIds.length) {
+      console.log('No unit products found for this renter');
+      return [];
+    }
+
+    // Find orders that contain any of these unit products
+    const orders = await Order.find({
+      products: { $in: unitProductIds }
+    })
+    .populate({
+      path: 'customerId',
+      select: '-password'
+    })
+    .populate({
+      path: 'products',
+      populate: {
+        path: 'productId',
+        model: 'ProductDetail'
+      }
+    })
+    .lean();
+
+    console.log('Found orders:', JSON.stringify(orders, null, 2));
+    return orders;
   } catch (error) {
+    console.error('Error in getOrdersByRenterId:', error);
     throw error;
   }
 };
@@ -97,6 +121,33 @@ export const getOrderWithRenterDetails = async (orderId) => {
         model: 'User',
       },
     });
+
+    if (!order) {
+      throw new Error('Order not found');
+    }
+
+    return order;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getOrderById = async (orderId) => {
+  try {
+    const order = await Order.findById(orderId)
+      .populate({
+        path: 'customerId',
+        model: 'User',
+        select: '-password'
+      })
+      .populate({
+        path: 'products',
+        model: 'UnitProduct',
+        populate: {
+          path: 'productId',
+          model: 'ProductDetail'
+        }
+      });
 
     if (!order) {
       throw new Error('Order not found');
