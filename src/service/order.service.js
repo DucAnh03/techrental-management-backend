@@ -3,7 +3,25 @@ import Order from '../models/Order.js';
 import UnitProduct from '../models/UnitProduct.js';
 import ProductDetail from '../models/ProductDetail.js';
 import ShopDetail from '../models/ShopDetail.js';
+import moment from 'moment';
 
+export const autoUpdateOrderStatus = async () => {
+  try {
+    const orders = await Order.find({ status: 'before_deadline' });
+    for (const order of orders) {
+      if (order.deliveryDate && order.duration) {
+        const deadline = moment(order.deliveryDate).add(order.duration, 'days');
+        if (moment().isAfter(deadline)) {
+          order.status = 'return_product';
+          await order.save();
+          console.log(`Order ${order._id} updated to return_product`);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error updating orders status:', error);
+  }
+};
 export const updateOrderStatus = async (orderId, newStatus) => {
   try {
     const updateData = { status: newStatus };

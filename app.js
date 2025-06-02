@@ -13,7 +13,13 @@ dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
+import cron from 'node-cron';
+import { autoUpdateOrderStatus } from './src/service/order.service.js';
 
+cron.schedule('0 0 * * *', async () => {
+  console.log('Running auto update order status job');
+  await autoUpdateOrderStatus();
+});
 connectDB().catch((error) => {
   console.error('❌ Failed to connect to MongoDB:', error.message);
   process.exit(1);
