@@ -7,6 +7,7 @@ import {
   getAllShopDetailByIdShop,
   getMyShopDetail,
   getShopDetailByUserId,
+  updateShopPackagesController,
 } from '../controllers/shopDetailController.js';
 import { ensureVerifiedUser, protect } from '../middlewares/authMiddleware.js';
 const router = express.Router();
@@ -20,4 +21,7 @@ router.get('/', getAllShopDetail);
 router.get('/:_id', getShopDetailById);
 router.get('/store/:_id', getAllShopDetailByIdShop);
 
+router.put('/packages',
+  protect, ensureVerifiedUser,
+  updateShopPackagesController);
 export default router;

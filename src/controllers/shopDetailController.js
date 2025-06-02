@@ -111,5 +111,21 @@ export const getShopDetailByUserId = async (req, res) => {
     return res.status(500).json({ message: 'Internal server error' });
   }
 };
+export const updateShopPackagesController = async (req, res) => {
+  try {
+    // Lấy userId từ người dùng đã xác thực
+    const userId = req.authenticatedUser?.userId;
+    if (!userId) return res.status(401).json({ message: 'Unauthorized' });
 
-export default { createShopDetail, getMyShopDetail, getShopDetailByUserId };
+    const { packagePost, packageInsurance } = req.body;
+    const updatedShop = await service.updateShopPackages(userId, packagePost, packageInsurance);
+    return res.status(200).json({
+      message: 'Shop packages updated successfully',
+      metadata: updatedShop,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: error.message });
+  }
+};
+export default { createShopDetail, getMyShopDetail, getShopDetailByUserId, updateShopPackagesController };

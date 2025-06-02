@@ -8,7 +8,7 @@ const ShopSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
-    
+
     name: { type: String, required: true },
     avatar: { type: String, default: '' },
     cover: { type: String, default: '' },
@@ -31,6 +31,15 @@ const ShopSchema = new mongoose.Schema(
       email: String,
     },
     operatingHours: String,
+    packagePost: {
+      type: [String],
+      enum: ['Free', 'Basic', 'Advanced', 'Business'],
+      default: ["Free"]
+    },
+    packageInsurance: {
+      type: [String],
+      enum: ['Basic', 'Standard', 'Premium'],
+    },
   },
   {
     collection: 'shopDetail',

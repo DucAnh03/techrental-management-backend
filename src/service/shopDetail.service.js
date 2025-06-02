@@ -44,11 +44,47 @@ const getShopDetailById = async (_id) => {
 const getShopDetailByUserId = async (userId) => {
   return await ShopDetail.findOne({ idUser: userId });
 };
+// Thêm hàm mới updateShopPackages
+export const updateShopPackages = async (shopId, packagePost, packageInsurance) => {
+  try {
+    // Tìm ShopDetail theo idUser (shopId)
+    const shop = await ShopDetail.findOne({ idUser: shopId });
+    if (!shop) {
+      throw new Error('ShopDetail not found');
+    }
+    if (packagePost && packagePost.length > 0) {
+      let newPackagePost = [];
+
+      if (shop.packagePost.includes('Free')) {
+        newPackagePost.push('Free');
+      }
+      // Loại bỏ "Free" từ packagePost gửi lên (vì đã được giữ)
+      const filtered = packagePost.filter(p => p !== 'Free');
+      // Nếu shop đã có "Free" thì chỉ cho phép thêm tối đa 1 giá trị nữa, ngược lại tối đa 2
+      const maxAllowed = newPackagePost.includes('Free') ? 1 : 2;
+      if (filtered.length > maxAllowed) {
+        throw new Error(`packagePost can have maximum ${maxAllowed} additional package(s)`);
+      }
+      newPackagePost = newPackagePost.concat(filtered);
+      shop.packagePost = newPackagePost;
+    }
+
+    // Với packageInsurance, update trực tiếp (không có giới hạn)
+    if (packageInsurance) {
+      shop.packageInsurance = packageInsurance;
+    }
+
+    await shop.save();
+    return shop;
+  } catch (error) {
+    throw error;
+  }
+};
 
 export default {
   createShopDetail,
   deleteShopDetailById,
   getAllShopDetail,
   getShopDetailById,
-  getShopDetailByUserId,
+  getShopDetailByUserId, updateShopPackages
 };
