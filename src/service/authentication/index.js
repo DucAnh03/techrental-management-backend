@@ -85,7 +85,7 @@ export const verifyUser = async (token) => {
       phone: decoded.phone,
       roles: decoded.roles,
       identityVerification: {
-        status: 'verified',
+        status: 'pending',
         verifiedAt: new Date(),
       },
     });
