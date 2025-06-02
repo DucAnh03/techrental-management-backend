@@ -147,17 +147,11 @@ export const createPaymentController = async (req, res) => {
     const orderIdReq = req.body.orderId;
     const customerId = req.body.customerId;
     const type = req.body.type;
-
     process.env.TZ = 'Asia/Ho_Chi_Minh';
     const vnp_TmnCode = process.env.VNP_TMNCODE;
     const vnp_HashSecret = process.env.VNP_HASHSECRET;
     const vnp_Url = process.env.VNP_URL;
     const vnp_ReturnUrl = process.env.VNP_RETURNURL;
-
-    console.log('VNP_TMNCODE:', vnp_TmnCode);
-    console.log('VNP_HASHSECRET:', vnp_HashSecret);
-    console.log('VNP_URL:', vnp_Url);
-    console.log('VNP_RETURNURL:', vnp_ReturnUrl);
 
     const date = new Date();
     const createDate = moment(date).format('YYYYMMDDHHmmss');
@@ -173,19 +167,19 @@ export const createPaymentController = async (req, res) => {
     let vnpUrl = vnp_Url;
     const returnUrl = vnp_ReturnUrl;
     const orderId = moment(date).format('DDHHmmss');
-    let amount = parseInt(req.body.amount);
+
+    const amountStr = req.body.amount.toString().replace(/\./g, '');
+    const amount = parseInt(amountStr);
     if (isNaN(amount)) {
       return res
         .status(400)
         .json({ success: false, message: 'Amount is invalid' });
     }
     const bankCode = req.body.bankCode;
-
     let locale = req.body.language;
     if (!locale) {
       locale = 'vn';
     }
-
     const currCode = 'VND';
     let vnp_Params = {
       vnp_Version: '2.1.0',
@@ -196,7 +190,7 @@ export const createPaymentController = async (req, res) => {
       vnp_TxnRef: orderId,
       vnp_OrderInfo: orderIdReq + '|' + customerId + '|' + type,
       vnp_OrderType: 'other',
-      vnp_Amount: amount * 100000,
+      vnp_Amount: amount * 100,
       vnp_ReturnUrl: returnUrl,
       vnp_IpAddr: ipAddr,
       vnp_CreateDate: createDate,
@@ -207,14 +201,11 @@ export const createPaymentController = async (req, res) => {
     }
 
     vnp_Params = sortObject(vnp_Params);
-
     const signData = qs.stringify(vnp_Params, { encode: false });
     const hmac = crypto.createHmac('sha512', secretKey);
     const signed = hmac.update(Buffer.from(signData, 'utf-8')).digest('hex');
     vnp_Params['vnp_SecureHash'] = signed;
-
     vnpUrl += '?' + qs.stringify(vnp_Params, { encode: false });
-
     res.status(200).json({ success: true, data: vnpUrl });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
