@@ -88,7 +88,6 @@ export const verifyUserController = async (req, res) => {
     // Token lỗi hoặc hết hạn
     return res.status(result.code).json({ message: result.message });
   }
-  return res.status(result.code).json({ message: result.message });
 
   const user = result.metadata;
 
