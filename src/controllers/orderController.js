@@ -16,6 +16,7 @@ import crypto from 'crypto';
 import UnitProduct from '../models/UnitProduct.js';
 import mongoose from 'mongoose';
 import Order from '../models/Order.js';
+import ProductDetail from '../models/ProductDetail.js';
 export const getOrdersByUserIdController = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -53,6 +54,27 @@ export const getOrdersByRenterIdController = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+export const checkOrderController = async (req, res) => {
+  const { products: productIds } = req.body;
+  for (const productId of productIds) {
+    const product = await ProductDetail.findById(productId);
+    if (!product) {
+
+      return res
+        .status(404)
+        .json({ success: false, message: `Product ${productId} not found` });
+    }
+    if (product.stock === product.soldCount) {
+      return res
+        .status(400)
+        .json({ success: false, message: `Product ${productId} is out of stock` });
+    }
+  }
+
+  return res
+    .status(200)
+    .json({ success: true, message: `Product` });
+}
 export const createOrderController = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -60,7 +82,6 @@ export const createOrderController = async (req, res) => {
   try {
     const { products: productIds, ...orderPayload } = req.body;
     const unitProductIds = [];
-
     for (const productId of productIds) {
       const unit = await UnitProduct.findOneAndUpdate(
         { productId, productStatus: 'available' },
@@ -80,6 +101,13 @@ export const createOrderController = async (req, res) => {
       ],
       { session }
     );
+    for (const productId of productIds) {
+      await ProductDetail.findByIdAndUpdate(
+        productId,
+        { $inc: { soldCount: -1 } },
+        { session }
+      );
+    }
 
     await session.commitTransaction();
     session.endSession();
@@ -97,8 +125,6 @@ export const updateOrderStatusController = async (req, res) => {
   try {
     const { orderId } = req.params;
     const { status } = req.body;
-    console.log('recived status:', status);
-    console.log('recived orderId', orderId);
 
     const updatedOrder = await updateOrderStatus(orderId, status);
     if (!updatedOrder) {
@@ -108,17 +134,28 @@ export const updateOrderStatusController = async (req, res) => {
     }
 
     const userId = req.body.toId;
-    console.log('TO ID', userId);
-
     const foundUser = await User.findById(userId);
-
-    console.log('foundUser', foundUser);
 
     if (status == 'pending_payment') {
       console.log('SENDING EMAIL');
       await sendOrderApprovedEmail(foundUser.email, orderId, userId);
     }
+    if (status === 'completed') {
+      const order = await Order.findById(orderId);
+      if (order && order.products && order.products.length > 0) {
+        for (const unitId of order.products) {
+          // Đổi trạng thái unit trở lại available
+          await UnitProduct.findByIdAndUpdate(unitId, { productStatus: 'available' });
 
+          // Lấy thông tin unit để biết productId
+          const unit = await UnitProduct.findById(unitId);
+          if (unit && unit.productId) {
+            // Tăng soldCount của sản phẩm (+1)
+            await ProductDetail.findByIdAndUpdate(unit.productId, { $inc: { soldCount: 1 } });
+          }
+        }
+      }
+    }
     res.status(200).json({ success: true, data: updatedOrder });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

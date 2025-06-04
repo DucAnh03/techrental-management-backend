@@ -25,7 +25,6 @@ export const autoUpdateOrderStatus = async () => {
 export const updateOrderStatus = async (orderId, newStatus) => {
   try {
     const updateData = { status: newStatus };
-
     if (newStatus === 'before_deadline') {
       updateData.deliveryDate = new Date();
     }

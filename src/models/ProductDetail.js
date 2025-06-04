@@ -38,20 +38,12 @@ const ProductSchema = new mongoose.Schema(
         adminApprovalStatus: {
             type: String,
             enum: ['approved', 'pending', 'rejected'],
-            default: 'pending',
-        },
-        status: {
-            type: String,
-            enum: ['available', 'rented'],
-            default: 'available',
+            default: 'approved',
         },
     },
     {
         collection: 'productDetail',
     },
 );
-ProductSchema.pre('save', function (next) {
-    this.status = this.stock > 0 ? 'available' : 'rented';
-    next();
-});
+
 export default mongoose.model('ProductDetail', ProductSchema);

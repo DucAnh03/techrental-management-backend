@@ -10,11 +10,13 @@ import {
   getOrderWithRenterDetailsController,
   createOrderController,
   getOrderByIdController,
+  checkOrderController,
 } from '../controllers/orderController.js';
 
 const router = express.Router();
 
 router.post('/', createOrderController);
+router.post('/check', checkOrderController);
 router.get('/:orderId', getOrderByIdController);
 router.put('/:orderId/status', updateOrderStatusController);
 router.get('/:orderId/products', getProductsFromOrderController);
