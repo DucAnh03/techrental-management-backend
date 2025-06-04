@@ -40,6 +40,10 @@ const ShopSchema = new mongoose.Schema(
       type: [String],
       enum: ['Basic', 'Standard', 'Premium'],
     },
+    skipConfirmation: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     collection: 'shopDetail',

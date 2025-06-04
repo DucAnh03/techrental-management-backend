@@ -128,4 +128,20 @@ export const updateShopPackagesController = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
-export default { createShopDetail, getMyShopDetail, getShopDetailByUserId, updateShopPackagesController };
+export const updateSkipConfirmationController = async (req, res) => {
+  try {
+    // Lấy userId từ người dùng đã xác thực
+    const userId = req.authenticatedUser?.userId;
+    if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+
+    const updatedShop = await service.updateSkipConfirmation(userId, true);
+    return res.status(200).json({
+      message: 'Shop skip updated successfully',
+      metadata: updatedShop,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: error.message });
+  }
+};
+export default { createShopDetail, getMyShopDetail, getShopDetailByUserId, updateShopPackagesController, updateSkipConfirmationController };

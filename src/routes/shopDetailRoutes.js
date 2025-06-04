@@ -8,6 +8,7 @@ import {
   getMyShopDetail,
   getShopDetailByUserId,
   updateShopPackagesController,
+  updateSkipConfirmationController,
 } from '../controllers/shopDetailController.js';
 import { ensureVerifiedUser, protect } from '../middlewares/authMiddleware.js';
 const router = express.Router();
@@ -24,4 +25,7 @@ router.get('/store/:_id', getAllShopDetailByIdShop);
 router.put('/packages',
   protect, ensureVerifiedUser,
   updateShopPackagesController);
+router.put('/skipConfirm',
+  protect, ensureVerifiedUser,
+  updateSkipConfirmationController);
 export default router;

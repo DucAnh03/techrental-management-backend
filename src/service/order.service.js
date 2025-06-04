@@ -73,13 +73,16 @@ export const getOrdersByUserId = async (userId) => {
     const orders = await Order.find({ customerId: objectId });
     const enrichedOrders = await Promise.all(
       orders.map(async (order) => {
-        const detailedProducts = await ProductDetail.find({
+        const detailedUnitProducts = await UnitProduct.find({
           _id: { $in: order.products },
+        }).populate({
+          path: 'productId',
+          model: 'ProductDetail'
         });
 
         return {
           ...order.toObject(),
-          products: detailedProducts,
+          products: detailedUnitProducts,
         };
       })
     );
@@ -91,41 +94,34 @@ export const getOrdersByUserId = async (userId) => {
 
 export const getOrdersByRenterId = async (renterId) => {
   try {
-    console.log('1. Searching for shop with renterId:', renterId);
     const shopDetails = await ShopDetail.findOne({ idUser: renterId });
     if (!shopDetails) {
       console.log('No shop found for this renterId');
       return [];
     }
-    console.log('2. Found shop:', shopDetails._id);
 
     const products = await ProductDetail.find({ idShop: shopDetails._id }).select('_id');
-    console.log('3. Found products:', products.length, 'products');
     if (!products.length) {
-      console.log('No products found for this shop');
       return [];
     }
 
     const productIds = products.map(p => p._id);
-    console.log('4. Product IDs:', productIds);
 
     const unitProducts = await UnitProduct.find({
       productId: { $in: productIds }
     }).select('_id productId');
-    console.log('5. Found unit products:', unitProducts.length, 'units');
 
     const unitProductIds = unitProducts.map(up => up._id);
     if (!unitProductIds.length) {
-      console.log('No unit products found');
       return [];
     }
-    console.log('6. Unit product IDs:', unitProductIds);
 
     // Thay đổi cách tìm kiếm orders
     const allOrders = await Order.find()
       .populate('customerId', '-password')
       .populate({
         path: 'products',
+        model: 'UnitProduct',
         populate: {
           path: 'productId',
           model: 'ProductDetail',
@@ -133,31 +129,13 @@ export const getOrdersByRenterId = async (renterId) => {
         }
       })
       .lean();
-
-    console.log('7. Found all orders:', allOrders.length);
-
-    // Lọc orders có products thuộc về shop
     const filteredOrders = allOrders.filter(order => {
       return order.products.some(product => {
         const productShopId = product.productId?.idShop?.toString();
         const shopId = shopDetails._id.toString();
-        console.log('Comparing shop IDs:', {
-          productShopId,
-          shopId,
-          matches: productShopId === shopId
-        });
         return productShopId === shopId;
       });
     });
-
-    console.log('8. Filtered orders:', filteredOrders.length);
-    console.log('9. Order details:', filteredOrders.map(o => ({
-      id: o._id,
-      status: o.status,
-      products: o.products.length,
-      totalPrice: o.totalPrice,
-      productShops: o.products.map(p => p.productId?.idShop)
-    })));
 
     return filteredOrders;
   } catch (error) {

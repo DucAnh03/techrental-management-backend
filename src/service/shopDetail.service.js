@@ -80,11 +80,25 @@ export const updateShopPackages = async (shopId, packagePost, packageInsurance) 
     throw error;
   }
 };
-
+export const updateSkipConfirmation = async (shopId, skipConfirmationValue) => {
+  try {
+    const shop = await ShopDetail.findOneAndUpdate(
+      { idUser: shopId },
+      { skipConfirmation: skipConfirmationValue },
+      { new: true, runValidators: true }
+    );
+    if (!shop) {
+      throw new Error('ShopDetail not found');
+    }
+    return shop;
+  } catch (error) {
+    throw error;
+  }
+};
 export default {
   createShopDetail,
   deleteShopDetailById,
   getAllShopDetail,
   getShopDetailById,
-  getShopDetailByUserId, updateShopPackages
+  getShopDetailByUserId, updateShopPackages, updateSkipConfirmation
 };
