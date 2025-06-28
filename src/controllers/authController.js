@@ -193,3 +193,43 @@ export const getAllUsersController = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// Google OAuth Callback Controller
+export const googleCallbackController = async (req, res) => {
+  try {
+    const user = req.user;
+    
+    if (!user) {
+      return res.redirect(`${process.env.CLIENT_URL}/login?error=authentication_failed`);
+    }
+
+    // Tạo JWT token
+    const token = jwt.sign(
+      {
+        userId: user._id,
+        roles: user.roles,
+        isVerified: user.identityVerification?.status === 'verified',
+        email: user.email,
+        phone: user.phone,
+      },
+      process.env.SECRET_KEY,
+      { expiresIn: '30d' }
+    );
+
+    // Redirect về frontend với token
+    return res.redirect(
+      `${process.env.CLIENT_URL}/oauth-callback?token=${token}&user=${encodeURIComponent(JSON.stringify({
+        _id: user._id,
+        email: user.email,
+        roles: user.roles,
+        name: user.name,
+        isVerified: user.identityVerification?.status === 'verified',
+        phone: user.phone,
+        avatar: user.avatar,
+      }))}`
+    );
+  } catch (error) {
+    console.error('Google callback error:', error);
+    return res.redirect(`${process.env.CLIENT_URL}/login?error=server_error`);
+  }
+};
