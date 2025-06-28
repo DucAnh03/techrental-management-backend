@@ -8,6 +8,7 @@ import { v2 as cloudinary } from 'cloudinary';
 import router from './src/routes/index.js';
 // import productRoutes from './src/routes/productRoutes.js';
 import { Server as SocketIOServer } from 'socket.io';
+import passport from './src/config/passport.js';
 
 dotenv.config();
 
@@ -43,6 +44,9 @@ app.use(
 );
 
 app.use(express.json());
+
+// Initialize Passport
+app.use(passport.initialize());
 
 // Routes
 app.use('/api', router);
