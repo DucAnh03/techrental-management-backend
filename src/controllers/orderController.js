@@ -85,11 +85,17 @@ export const createOrderController = async (req, res) => {
     for (const productId of productIds) {
       const unit = await UnitProduct.findOneAndUpdate(
         { productId, productStatus: 'available' },
-        { productStatus: 'rented' },
+        {
+          productStatus: 'rented',
+          renterId: orderPayload.customerId
+        },
         { new: true, session }
       );
 
       unitProductIds.push(unit?._id);
+
+      // Không giảm soldCount khi tạo order, chỉ khi xác nhận mới giảm
+      // soldCount sẽ được xử lý trong updateOrderStatusController khi status = 'pending_payment'
     }
 
     const newOrder = await Order.create(
@@ -101,13 +107,6 @@ export const createOrderController = async (req, res) => {
       ],
       { session }
     );
-    for (const productId of productIds) {
-      await ProductDetail.findByIdAndUpdate(
-        productId,
-        { $inc: { soldCount: -1 } },
-        { session }
-      );
-    }
 
     await session.commitTransaction();
     session.endSession();
@@ -139,19 +138,60 @@ export const updateOrderStatusController = async (req, res) => {
     if (status == 'pending_payment') {
       console.log('SENDING EMAIL');
       await sendOrderApprovedEmail(foundUser.email, orderId, userId);
+
+      const order = await Order.findById(orderId);
+      if (order && order.products && order.products.length > 0) {
+        for (const unitId of order.products) {
+          const unit = await UnitProduct.findById(unitId);
+          if (unit && unit.productId) {
+            await UnitProduct.findByIdAndUpdate(unitId, {
+              productStatus: 'rented',
+              renterId: order.customerId
+            });
+
+            const product = await ProductDetail.findById(unit.productId);
+            if (product && product.soldCount > 0) {
+              await ProductDetail.findByIdAndUpdate(unit.productId, { $inc: { soldCount: -1 } });
+            }
+          }
+        }
+      }
     }
     if (status === 'completed') {
       const order = await Order.findById(orderId);
       if (order && order.products && order.products.length > 0) {
         for (const unitId of order.products) {
-          // Đổi trạng thái unit trở lại available
-          await UnitProduct.findByIdAndUpdate(unitId, { productStatus: 'available' });
+          // Đổi trạngx thái unit trở lại available
+          await UnitProduct.findByIdAndUpdate(unitId, {
+            productStatus: 'available',
+            renterId: null
+          });
 
-          // Lấy thông tin unit để biết productId
           const unit = await UnitProduct.findById(unitId);
           if (unit && unit.productId) {
-            // Tăng soldCount của sản phẩm (+1)
-            await ProductDetail.findByIdAndUpdate(unit.productId, { $inc: { soldCount: 1 } });
+            const product = await ProductDetail.findById(unit.productId);
+            if (product && product.soldCount < product.stock) {
+              await ProductDetail.findByIdAndUpdate(unit.productId, { $inc: { soldCount: 1 } });
+            }
+          }
+        }
+      }
+    }
+    if (status === 'canceled') {
+      const order = await Order.findById(orderId);
+      if (order && order.products && order.products.length > 0) {
+        for (const unitId of order.products) {
+          await UnitProduct.findByIdAndUpdate(unitId, {
+            productStatus: 'available',
+            renterId: null
+          });
+
+          const unit = await UnitProduct.findById(unitId);
+          if (unit && unit.productId) {
+            const product = await ProductDetail.findById(unit.productId);
+            if (product && product.soldCount < product.stock) {
+              await ProductDetail.findByIdAndUpdate(unit.productId, { $inc: { soldCount: 1 } });
+            }
           }
         }
       }
