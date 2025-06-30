@@ -82,26 +82,25 @@ export const createOrderController = async (req, res) => {
   try {
     const { products: productIds, ...orderPayload } = req.body;
     const unitProductIds = [];
+    const customerId = req.user._id;
     for (const productId of productIds) {
       const unit = await UnitProduct.findOneAndUpdate(
         { productId, productStatus: 'available' },
         {
           productStatus: 'rented',
-          renterId: orderPayload.customerId
+          renterId: customerId
         },
         { new: true, session }
       );
 
       unitProductIds.push(unit?._id);
-
-      // Không giảm soldCount khi tạo order, chỉ khi xác nhận mới giảm
-      // soldCount sẽ được xử lý trong updateOrderStatusController khi status = 'pending_payment'
     }
 
     const newOrder = await Order.create(
       [
         {
           ...orderPayload,
+          customerId,
           products: unitProductIds,
         },
       ],
