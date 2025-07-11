@@ -10,13 +10,20 @@ import {
   getOrderWithRenterDetails,
   getOrderById,
 } from '../service/order.service.js';
-import { sendOrderApprovedEmail } from '../utils/mailer.js';
+import {
+  sendOrderPlacedEmail,
+  sendOrderPaidEmail,
+  sendOrderStatusUpdatedEmail,
+  sendOrderApprovedEmail,
+} from '../utils/mailer.js';
 import qs from 'qs';
 import crypto from 'crypto';
 import UnitProduct from '../models/UnitProduct.js';
 import mongoose from 'mongoose';
 import Order from '../models/Order.js';
 import ProductDetail from '../models/ProductDetail.js';
+
+import jwt from 'jsonwebtoken';
 export const getOrdersByUserIdController = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -59,22 +66,20 @@ export const checkOrderController = async (req, res) => {
   for (const productId of productIds) {
     const product = await ProductDetail.findById(productId);
     if (!product) {
-
       return res
         .status(404)
         .json({ success: false, message: `Product ${productId} not found` });
     }
     if (product.stock === product.soldCount) {
-      return res
-        .status(400)
-        .json({ success: false, message: `Product ${productId} is out of stock` });
+      return res.status(400).json({
+        success: false,
+        message: `Product ${productId} is out of stock`,
+      });
     }
   }
 
-  return res
-    .status(200)
-    .json({ success: true, message: `Product` });
-}
+  return res.status(200).json({ success: true, message: `Product` });
+};
 export const createOrderController = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -84,14 +89,16 @@ export const createOrderController = async (req, res) => {
     const unitProductIds = [];
     const customerId = req.user._id;
     for (const productId of productIds) {
+      console.log('checking productId:', productId);
       const unit = await UnitProduct.findOneAndUpdate(
         { productId, productStatus: 'available' },
         {
           productStatus: 'rented',
-          renterId: customerId
+          renterId: customerId,
         },
         { new: true, session }
       );
+      console.log('unit result:', unit);
 
       unitProductIds.push(unit?._id);
     }
@@ -106,6 +113,10 @@ export const createOrderController = async (req, res) => {
       ],
       { session }
     );
+
+    // Gửi mail khi đặt hàng thành công
+    const user = await User.findById(customerId);
+    await sendOrderPlacedEmail(user.email, newOrder[0]._id, user._id);
 
     await session.commitTransaction();
     session.endSession();
@@ -131,8 +142,11 @@ export const updateOrderStatusController = async (req, res) => {
         .json({ success: false, message: 'Order not found' });
     }
 
-    const userId = req.body.toId;
+    const userId = req.body.toId || updatedOrder.customerId;
     const foundUser = await User.findById(userId);
+
+    // Gửi mail khi cập nhật trạng thái đơn hàng
+    await sendOrderStatusUpdatedEmail(foundUser.email, orderId, userId, status);
 
     if (status == 'pending_payment') {
       console.log('SENDING EMAIL');
@@ -145,12 +159,14 @@ export const updateOrderStatusController = async (req, res) => {
           if (unit && unit.productId) {
             await UnitProduct.findByIdAndUpdate(unitId, {
               productStatus: 'rented',
-              renterId: order.customerId
+              renterId: order.customerId,
             });
 
             const product = await ProductDetail.findById(unit.productId);
             if (product && product.soldCount > 0) {
-              await ProductDetail.findByIdAndUpdate(unit.productId, { $inc: { soldCount: -1 } });
+              await ProductDetail.findByIdAndUpdate(unit.productId, {
+                $inc: { soldCount: -1 },
+              });
             }
           }
         }
@@ -163,14 +179,16 @@ export const updateOrderStatusController = async (req, res) => {
           // Đổi trạngx thái unit trở lại available
           await UnitProduct.findByIdAndUpdate(unitId, {
             productStatus: 'available',
-            renterId: null
+            renterId: null,
           });
 
           const unit = await UnitProduct.findById(unitId);
           if (unit && unit.productId) {
             const product = await ProductDetail.findById(unit.productId);
             if (product && product.soldCount < product.stock) {
-              await ProductDetail.findByIdAndUpdate(unit.productId, { $inc: { soldCount: 1 } });
+              await ProductDetail.findByIdAndUpdate(unit.productId, {
+                $inc: { soldCount: 1 },
+              });
             }
           }
         }
@@ -182,14 +200,16 @@ export const updateOrderStatusController = async (req, res) => {
         for (const unitId of order.products) {
           await UnitProduct.findByIdAndUpdate(unitId, {
             productStatus: 'available',
-            renterId: null
+            renterId: null,
           });
 
           const unit = await UnitProduct.findById(unitId);
           if (unit && unit.productId) {
             const product = await ProductDetail.findById(unit.productId);
             if (product && product.soldCount < product.stock) {
-              await ProductDetail.findByIdAndUpdate(unit.productId, { $inc: { soldCount: 1 } });
+              await ProductDetail.findByIdAndUpdate(unit.productId, {
+                $inc: { soldCount: 1 },
+              });
             }
           }
         }
@@ -322,6 +342,17 @@ export const vnpayReturnController = async (req, res) => {
     let signed = hmac.update(Buffer.from(signData, 'utf-8')).digest('hex');
 
     if (secureHash === signed) {
+      // Gửi mail xác nhận thanh toán thành công
+      // Lấy orderId và customerId từ vnp_OrderInfo
+      const [orderIdReq, customerId, type] =
+        vnp_Params['vnp_OrderInfo']?.split('|') || [];
+      if (orderIdReq && customerId) {
+        const order = await Order.findById(orderIdReq);
+        const user = await User.findById(customerId);
+        if (order && user) {
+          await sendOrderPaidEmail(user.email, order._id, user._id);
+        }
+      }
       res.render('success', { code: vnp_Params['vnp_ResponseCode'] });
     } else {
       res.render('success', { code: '97' });

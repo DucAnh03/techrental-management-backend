@@ -118,7 +118,11 @@ export const updateShopPackagesController = async (req, res) => {
     if (!userId) return res.status(401).json({ message: 'Unauthorized' });
 
     const { packagePost, packageInsurance } = req.body;
-    const updatedShop = await service.updateShopPackages(userId, packagePost, packageInsurance);
+    const updatedShop = await service.updateShopPackages(
+      userId,
+      packagePost,
+      packageInsurance
+    );
     return res.status(200).json({
       message: 'Shop packages updated successfully',
       metadata: updatedShop,
@@ -144,4 +148,26 @@ export const updateSkipConfirmationController = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
-export default { createShopDetail, getMyShopDetail, getShopDetailByUserId, updateShopPackagesController, updateSkipConfirmationController };
+export const updateShopDetailController = async (req, res) => {
+  try {
+    const userId = req.authenticatedUser?.userId;
+    if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+    const updatedShop = await service.updateShopDetail(userId, req.body);
+    return res
+      .status(200)
+      .json({
+        message: 'ShopDetail updated successfully',
+        metadata: updatedShop,
+      });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: error.message });
+  }
+};
+export default {
+  createShopDetail,
+  getMyShopDetail,
+  getShopDetailByUserId,
+  updateShopPackagesController,
+  updateSkipConfirmationController,
+};
