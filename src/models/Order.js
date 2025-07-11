@@ -1,4 +1,7 @@
 import mongoose from 'mongoose';
+import { sendOrderPlacedEmail } from '../utils/mailer.js';
+import { sendOrderPaidEmail } from '../utils/mailer.js';
+import { sendOrderStatusUpdatedEmail } from '../utils/mailer.js';
 
 const OrderSchema = new mongoose.Schema(
     {

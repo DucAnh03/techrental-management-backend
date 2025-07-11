@@ -60,3 +60,54 @@ export const sendOrderApprovedEmail = async (to, orderId, userId) => {
     `,
   });
 };
+
+// Gửi mail khi đặt hàng thành công
+export const sendOrderPlacedEmail = async (to, orderId, userId) => {
+  const orderLink = `${CLIENT_URL}/personal/${userId}/orders`;
+  await transporter.sendMail({
+    from: `"TechRental" <${process.env.SMTP_MAIL}>`,
+    to,
+    subject: 'Bạn đã đặt hàng thành công - TechRental',
+    html: `
+      <h3>Xin chào,</h3>
+      <p>Bạn đã đặt đơn hàng <strong>${orderId}</strong> thành công.</p>
+      <p>Vui lòng truy cập để xem chi tiết đơn hàng:</p>
+      <a href="${orderLink}" target="_blank">${orderLink}</a>
+      <p>Cảm ơn bạn đã sử dụng dịch vụ của TechRental!</p>
+    `,
+  });
+};
+
+// Gửi mail khi thanh toán thành công
+export const sendOrderPaidEmail = async (to, orderId, userId) => {
+  const orderLink = `${CLIENT_URL}/personal/${userId}/orders`;
+  await transporter.sendMail({
+    from: `"TechRental" <${process.env.SMTP_MAIL}>`,
+    to,
+    subject: 'Thanh toán thành công - TechRental',
+    html: `
+      <h3>Xin chào,</h3>
+      <p>Đơn hàng <strong>${orderId}</strong> của bạn đã được thanh toán thành công.</p>
+      <p>Vui lòng truy cập để xem chi tiết đơn hàng:</p>
+      <a href="${orderLink}" target="_blank">${orderLink}</a>
+      <p>Cảm ơn bạn đã sử dụng dịch vụ của TechRental!</p>
+    `,
+  });
+};
+
+// Gửi mail khi shop cập nhật trạng thái đơn hàng
+export const sendOrderStatusUpdatedEmail = async (to, orderId, userId, status) => {
+  const orderLink = `${CLIENT_URL}/personal/${userId}/orders`;
+  await transporter.sendMail({
+    from: `"TechRental" <${process.env.SMTP_MAIL}>`,
+    to,
+    subject: `Cập nhật trạng thái đơn hàng - TechRental`,
+    html: `
+      <h3>Xin chào,</h3>
+      <p>Đơn hàng <strong>${orderId}</strong> của bạn đã được cập nhật trạng thái: <strong>${status}</strong>.</p>
+      <p>Vui lòng truy cập để xem chi tiết đơn hàng:</p>
+      <a href="${orderLink}" target="_blank">${orderLink}</a>
+      <p>Cảm ơn bạn đã sử dụng dịch vụ của TechRental!</p>
+    `,
+  });
+};

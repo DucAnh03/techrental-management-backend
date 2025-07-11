@@ -9,6 +9,7 @@ import {
   getShopDetailByUserId,
   updateShopPackagesController,
   updateSkipConfirmationController,
+  updateShopDetailController, // thêm controller mới
 } from '../controllers/shopDetailController.js';
 import { ensureVerifiedUser, protect } from '../middlewares/authMiddleware.js';
 const router = express.Router();
@@ -22,10 +23,17 @@ router.get('/', getAllShopDetail);
 router.get('/:_id', getShopDetailById);
 router.get('/store/:_id', getAllShopDetailByIdShop);
 
-router.put('/packages',
-  protect, ensureVerifiedUser,
-  updateShopPackagesController);
-router.put('/skipConfirm',
-  protect, ensureVerifiedUser,
-  updateSkipConfirmationController);
+router.put(
+  '/packages',
+  protect,
+  ensureVerifiedUser,
+  updateShopPackagesController
+);
+router.put(
+  '/skipConfirm',
+  protect,
+  ensureVerifiedUser,
+  updateSkipConfirmationController
+);
+router.put('/', protect, ensureVerifiedUser, updateShopDetailController);
 export default router;

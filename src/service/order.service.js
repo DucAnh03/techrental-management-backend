@@ -4,6 +4,7 @@ import UnitProduct from '../models/UnitProduct.js';
 import ProductDetail from '../models/ProductDetail.js';
 import ShopDetail from '../models/ShopDetail.js';
 import moment from 'moment';
+import { sendOrderPlacedEmail } from '../utils/mailer.js';
 
 export const autoUpdateOrderStatus = async () => {
   try {

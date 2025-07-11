@@ -49,10 +49,21 @@ router.get('/google', passport.authenticate('google', {
   prompt: 'select_account'
 }));
 
-router.get('/google/callback', 
-  passport.authenticate('google', { session: false, failureRedirect: '/' }),
-  googleCallbackController
-);
+router.get('/google/callback', (req, res, next) => {
+  passport.authenticate('google', { session: false }, async (err, user, info) => {
+    if (err || !user) {
+      console.error('❌ Google Auth Failed:', err || 'No user');
+      return res.redirect(`${process.env.CLIENT_URL}/login?error=auth_failed`);
+    }
+    req.user = user;
+    try {
+      await googleCallbackController(req, res);
+    } catch (error) {
+      console.error('❌ Error in googleCallbackController:', error);
+      return res.redirect(`${process.env.CLIENT_URL}/login?error=server_error`);
+    }
+  })(req, res, next);
+});
 
 // Google OAuth - Local Testing
 router.get('/google/local', async (req, res) => {

@@ -1,4 +1,3 @@
-import jwt from 'jsonwebtoken';
 import {
   sendToken,
   sendResetToken,
@@ -14,7 +13,7 @@ import {
 import User from '../models/User.js';
 import bcrypt from 'bcryptjs';
 import ProductDetail from '../models/ProductDetail.js';
-
+import jwt from 'jsonwebtoken';
 // Register User
 export const registerController = async (req, res) => {
   try {
@@ -194,42 +193,64 @@ export const getAllUsersController = async (req, res) => {
   }
 };
 
+function getClientUrl() {
+  let client = process.env.CLIENT_URL || 'http://localhost:3000';
+
+  // Thêm protocol nếu CI/CD cấu hình thiếu
+  if (!/^https?:\/\//i.test(client)) {
+    client = `https://${client.replace(/^\/+/, '')}`;
+  }
+
+  // Xoá dấu '/' cuối để tránh //oauth-callback
+  return client.replace(/\/+$/, '');
+}
+
 // Google OAuth Callback Controller
 export const googleCallbackController = async (req, res) => {
   try {
     const user = req.user;
-    
+    const FE_URL = getClientUrl();
+
     if (!user) {
-      return res.redirect(`${process.env.CLIENT_URL}/login?error=authentication_failed`);
+      return res.redirect(`${FE_URL}/login?error=authentication_failed`);
     }
 
-    // Tạo JWT token
-    const token = jwt.sign(
-      {
-        userId: user._id,
-        roles: user.roles,
-        isVerified: user.identityVerification?.status === 'verified',
-        email: user.email,
-        phone: user.phone,
-      },
-      process.env.SECRET_KEY,
-      { expiresIn: '30d' }
-    );
+    // 1. Tạo JWT
+    const tokenPayload = {
+      userId: user._id,
+      roles: user.roles,
+      isVerified: user.identityVerification?.status === 'verified',
+      email: user.email,
+      phone: user.phone,
+    };
+    const token = jwt.sign(tokenPayload, process.env.SECRET_KEY, {
+      expiresIn: '30d',
+    });
 
-    // Redirect về frontend với token
-    return res.redirect(
-      `${process.env.CLIENT_URL}/oauth-callback?token=${token}&user=${encodeURIComponent(JSON.stringify({
-        _id: user._id,
-        email: user.email,
-        roles: user.roles,
-        name: user.name,
-        isVerified: user.identityVerification?.status === 'verified',
-        phone: user.phone,
-        avatar: user.avatar,
-      }))}`
-    );
-  } catch (error) {
-    console.error('Google callback error:', error);
-    return res.redirect(`${process.env.CLIENT_URL}/login?error=server_error`);
+    // 2. Ghép URL redirect về FE
+    const redirectUrl =
+      `${FE_URL}/oauth-callback` +
+      `?token=${encodeURIComponent(token)}` +
+      `&user=${encodeURIComponent(
+        JSON.stringify({
+          _id: user._id,
+          email: user.email,
+          roles: user.roles,
+          name: user.name,
+          isVerified: user.identityVerification?.status === 'verified',
+          phone: user.phone,
+          avatar: user.avatar,
+        })
+      )}`;
+
+    // Log hỗ trợ debug khi DEV
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[Google OAuth] Redirect →', redirectUrl);
+    }
+
+    return res.redirect(redirectUrl);
+  } catch (err) {
+    console.error('Google callback error:', err);
+    return res.redirect(`${getClientUrl()}/login?error=server_error`);
   }
 };
