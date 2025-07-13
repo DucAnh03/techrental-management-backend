@@ -66,15 +66,6 @@ export const verifyUser = async (token) => {
     // A. Đã có user (do resend mail)  ➜ chỉ update status
     let user = await User.findOne({ email: decoded.email });
     if (user) {
-      if (user.identityVerification?.status === 'verified') {
-        return { code: 200, message: 'Đã xác minh trước đó', metadata: user };
-      }
-
-      user.identityVerification = {
-        status: 'verified',
-        verifiedAt: new Date(),
-      };
-      await user.save();
       return { code: 200, message: 'Xác minh thành công', metadata: user };
     }
 
