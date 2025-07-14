@@ -135,14 +135,19 @@ export const updateOrderStatusController = async (req, res) => {
     const { orderId } = req.params;
     const { status } = req.body;
 
+    console.log('Updating order status:', { orderId, status });
+
     const updatedOrder = await updateOrderStatus(orderId, status);
     if (!updatedOrder) {
+      console.log('Order not found:', orderId);
       return res
         .status(404)
         .json({ success: false, message: 'Order not found' });
     }
 
-    const userId = req.body.toId || updatedOrder.customerId;
+    // Handle case where toId might be an object (from frontend) or just an ID
+    const toId = req.body.toId;
+    const userId = (typeof toId === 'object' && toId._id) ? toId._id : (toId || updatedOrder.customerId);
     const foundUser = await User.findById(userId);
 
     // Gửi mail khi cập nhật trạng thái đơn hàng

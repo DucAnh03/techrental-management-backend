@@ -7,6 +7,7 @@ import {
   getUserById,
 } from '../controllers/userController.js';
 import { protect, authorizeRoles } from '../middlewares/authMiddleware.js';
+import isAdmin from '../middlewares/isAdmin.js';
 
 const router = express.Router();
 
@@ -17,13 +18,13 @@ router.post('/become-owner', protect, becomeOwnerController);
 router.get('/get-user-by-id/:_id', getUserById);
 router.get('/', getAllUsersController);
 
-router.get('/count', async (req, res) => {
+router.get('/count', protect, isAdmin, async (req, res) => {
   const User = (await import('../models/User.js')).default;
   const count = await User.countDocuments();
   res.json({ data: { count } });
 });
 
-router.get('/with-products', async (req, res) => {
+router.get('/with-products', protect, isAdmin, async (req, res) => {
   const ShopDetail = (await import('../models/ShopDetail.js')).default;
   const ProductDetail = (await import('../models/ProductDetail.js')).default;
   const shops = await ShopDetail.find().populate('idUser');
@@ -42,6 +43,12 @@ router.get('/with-products', async (req, res) => {
       productCount: userMap[shop._id] || 0,
     }));
   res.json({ data: result });
+});
+
+router.get('/all', protect, isAdmin, async (req, res) => {
+  const User = (await import('../models/User.js')).default;
+  const users = await User.find();
+  res.json({ data: users });
 });
 
 export default router;

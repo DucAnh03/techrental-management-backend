@@ -8,6 +8,7 @@ import userRouter from './userRoutes.js';
 import chatRouter from './chatRoutes.js';
 import UnitProductRoutes from './unitProductRoutes.js';
 import orderRoutes from './orderRoutes.js';
+import adminRoutes from './adminRoutes.js';
 
 import categoryRouter from './categoryRoutes.js';
 import orderEvidenceRoutes from './orderEvidenceRoutes.js';
@@ -24,4 +25,5 @@ router.use('/chatrooms', chatRouter);
 router.use('/order-products', UnitProductRoutes);
 router.use('/order-evidence', orderEvidenceRoutes);
 router.use('/orders', orderRoutes);
+router.use('/admin', adminRoutes);
 export default router;
