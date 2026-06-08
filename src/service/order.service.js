@@ -41,7 +41,7 @@ export const updateOrderStatus = async (orderId, newStatus) => {
 };
 export const getProductsFromOrder = async (orderId) => {
   try {
-    const order = await Order.findById(orderId).populate('products');
+    const order = await Order.findById(orderId).populate('products').lean();
     if (!order) {
       throw new Error('Order not found');
     }
@@ -52,7 +52,7 @@ export const getProductsFromOrder = async (orderId) => {
 };
 export const getAllOrderedProducts = async () => {
   try {
-    const orders = await Order.find().populate('products');
+    const orders = await Order.find().populate('products').lean();
     const allProducts = orders.flatMap((order) => order.products);
     return allProducts;
   } catch (error) {
@@ -71,7 +71,7 @@ export const createOrder = async (orderData) => {
 export const getOrdersByUserId = async (userId) => {
   try {
     const objectId = new mongoose.Types.ObjectId(userId);
-    const orders = await Order.find({ customerId: objectId });
+    const orders = await Order.find({ customerId: objectId }).lean();
     const enrichedOrders = await Promise.all(
       orders.map(async (order) => {
         const detailedUnitProducts = await UnitProduct.find({
@@ -79,10 +79,10 @@ export const getOrdersByUserId = async (userId) => {
         }).populate({
           path: 'productId',
           model: 'ProductDetail'
-        });
+        }).lean();
 
         return {
-          ...order.toObject(),
+          ...order,
           products: detailedUnitProducts,
         };
       })
@@ -153,7 +153,7 @@ export const getOrderWithRenterDetails = async (orderId) => {
         path: 'renterId',
         model: 'User',
       },
-    });
+    }).lean();
 
     if (!order) {
       throw new Error('Order not found');
@@ -180,7 +180,7 @@ export const getOrderById = async (orderId) => {
           path: 'productId',
           model: 'ProductDetail'
         }
-      });
+      }).lean();
 
     if (!order) {
       throw new Error('Order not found');

@@ -1,5 +1,5 @@
+import 'dotenv/config';
 import express from 'express';
-import dotenv from 'dotenv';
 import cors from 'cors';
 import http from 'http';
 
@@ -9,8 +9,6 @@ import router from './src/routes/index.js';
 // import productRoutes from './src/routes/productRoutes.js';
 import { Server as SocketIOServer } from 'socket.io';
 import passport from './src/config/passport.js';
-
-dotenv.config();
 
 const app = express();
 const server = http.createServer(app);

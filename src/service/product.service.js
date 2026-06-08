@@ -65,19 +65,19 @@ export const deleteProductById = async (_id) => {
 export const getAllProduct = async () => {
     return await ProductDetail.find()
         .populate("idShop")
-        .populate("category").populate('reviews');
+        .populate("category").populate('reviews').lean();
 };
 export const getAllProductAprove = async () => {
     return await ProductDetail.find({ adminApprovalStatus: "approved" })
         .populate("idShop")
         .populate("category")
-        .populate("reviews");
+        .populate("reviews").lean();
 };
 
 export const getProductById = async (_id) => {
     try {
         const product = await ProductDetail.findById(_id).populate("idShop")
-            .populate("category").populate('reviews')
+            .populate("category").populate('reviews').lean()
 
         return product;
     } catch (error) {
@@ -88,7 +88,7 @@ export const getProductById = async (_id) => {
 
 export const getAllProductByIdShop = async (_id) => {
     return await ProductDetail.find({ idShop: _id }).populate("idShop")
-        .populate("category").populate('reviews');
+        .populate("category").populate('reviews').lean();
 };
 
 export default { createProduct, deleteProductById, getAllProduct, getProductById, getAllProductByIdShop, createManyProduct, getAllProductAprove };
